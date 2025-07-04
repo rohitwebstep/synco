@@ -1,15 +1,24 @@
 const bcrypt = require("bcrypt");
+const path = require("path");
+
 const { createToken } = require("../../utils/jwt");
 const sendEmail = require("../../utils/email/sendEmail");
 
 const memberModel = require("../../services/admin/member");
 const emailModel = require("../../services/email");
 const { validateFormData } = require("../../utils/validateFormData");
+const { saveFile } = require("../../utils/fileHandler");
 
-// ✅ Create a new member
+// Set DEBUG flag
+const DEBUG = true;
+
 exports.createMember = async (req, res) => {
     try {
         const formData = req.body;
+        const file = req.file;
+
+        if (DEBUG) console.log("📥 Received FormData:", formData);
+        if (DEBUG && file) console.log("📎 Received File:", file.originalname);
 
         const email = formData.email;
         const password = formData.password;
@@ -18,26 +27,32 @@ exports.createMember = async (req, res) => {
         const phoneNumber = formData.phoneNumber || null;
         const roleId = formData.roleId || null;
 
-        // Check if email already exists
+        if (DEBUG) console.log("🔍 Checking if email already exists:", email);
+
         const { status: exists, data: existingMember } = await memberModel.findMemberByEmail(email);
         if (exists && existingMember) {
+            if (DEBUG) console.log("❌ Email already registered:", email);
             return res.status(409).json({
                 status: false,
                 message: "This email is already registered. Please use another email.",
             });
         }
 
-        // Validate fields
+        if (DEBUG) console.log("✅ Email is available");
+
         const validation = validateFormData(formData, {
             requiredFields: ["name", "email", "password", "roleId"],
             patternValidations: {
                 email: "email",
                 status: "boolean",
             },
+            fileExtensionValidations: {
+                profile: ["jpg", "jpeg", "png", "webp"]
+            }
         });
 
         if (!validation.isValid) {
-            logMessage("warn", "Form validation failed", validation.error);
+            if (DEBUG) console.log("❌ Form validation failed:", validation.error);
             return res.status(400).json({
                 status: false,
                 error: validation.error,
@@ -45,14 +60,16 @@ exports.createMember = async (req, res) => {
             });
         }
 
-        // Convert status string to boolean
+        if (DEBUG) console.log("✅ Form validation passed");
+
         const statusRaw = (formData.status || "").toString().toLowerCase();
         const status = ["true", "1", "yes", "active"].includes(statusRaw);
 
-        // Hash password
+        if (DEBUG) console.log("🔐 Hashing password...");
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create member (no profile image)
+        if (DEBUG) console.log("📦 Creating member...");
+
         const createResult = await memberModel.createMember({
             name,
             email,
@@ -60,22 +77,48 @@ exports.createMember = async (req, res) => {
             position,
             phoneNumber,
             roleId,
-            profile: "", // No profile image handled
+            profile: "", // will update later
             status,
         });
 
         if (!createResult.status) {
+            if (DEBUG) console.log("❌ Member creation failed:", createResult.message);
             return res.status(500).json({
                 status: false,
                 message: createResult.message || "Failed to create member.",
             });
         }
 
+        const memberId = createResult.data.id;
+        let savedProfilePath = "";
+
+        if (file) {
+            const fileName = `${Date.now()}_${file.originalname}`;
+            const fullPath = path.join(process.cwd(), "uploads", "member", `${memberId}`, "profile", fileName);
+            savedProfilePath = `uploads/member/${memberId}/profile/${fileName}`;
+
+            if (DEBUG) console.log("📁 Saving file to:", fullPath);
+
+            try {
+                await saveFile(file, fullPath);
+                await memberModel.updateMember(memberId, { profile: savedProfilePath });
+
+                if (DEBUG) console.log("✅ Profile image saved and updated in DB");
+            } catch (fileErr) {
+                console.error("❌ Failed to save profile image:", fileErr);
+            }
+        } else {
+            if (DEBUG) console.log("ℹ️ No file uploaded, skipping file save.");
+        }
+
+        if (DEBUG) console.log("✅ Member created successfully with ID:", memberId);
+
         return res.status(201).json({
             status: true,
             message: "Member created successfully.",
-            data: { memberId: createResult.data.id },
+            data: { memberId, profile: savedProfilePath },
         });
+
     } catch (error) {
         console.error("❌ Create Member Error:", error);
         return res.status(500).json({
@@ -84,7 +127,6 @@ exports.createMember = async (req, res) => {
         });
     }
 };
-
 
 // ✅ Get all members
 exports.listMembers = async (req, res) => {

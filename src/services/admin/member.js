@@ -85,6 +85,34 @@ exports.getMemberById = async (id) => {
     }
 };
 
+// Update member fields by ID
+exports.updateMember = async (memberId, updateData) => {
+    try {
+        const result = await Member.update(updateData, {
+            where: { id: memberId },
+        });
+
+        if (result[0] === 0) {
+            return {
+                status: false,
+                message: "No member updated. ID may be incorrect.",
+            };
+        }
+
+        return {
+            status: true,
+            message: "Member updated successfully.",
+        };
+    } catch (error) {
+        console.error("❌ Sequelize Error in updateMember:", error);
+
+        return {
+            status: false,
+            message: error?.parent?.sqlMessage || error?.message || "Failed to update member.",
+        };
+    }
+};
+
 // Get all members
 exports.getAllMembers = async () => {
     try {
