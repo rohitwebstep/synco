@@ -133,7 +133,6 @@ exports.createMember = async (req, res) => {
 
 // ✅ Get all members
 exports.listMembers = async (req, res) => {
-    const DEBUG = process.env.DEBUG === "true";
 
     if (DEBUG) console.log("📋 Request received to list all members");
 
@@ -175,7 +174,6 @@ exports.listMembers = async (req, res) => {
 // ✅ Get a specific member profile
 exports.getMemberProfile = async (req, res) => {
     const { id } = req.params;
-    const DEBUG = true;
 
     if (DEBUG) console.log("👤 Fetching member profile for ID:", id);
 
@@ -217,8 +215,6 @@ exports.updateMember = async (req, res) => {
     const { id } = req.params;
     const formData = req.body;
     const file = req.file;
-
-    const DEBUG = true;
 
     if (DEBUG) console.log("🛠️ Updating member ID:", id);
     if (DEBUG) console.log("📥 Received Update FormData:", formData);
@@ -332,10 +328,57 @@ exports.updateMember = async (req, res) => {
     }
 };
 
+// ✅ Update member status
+exports.changeMemberStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.query;
+
+    if (DEBUG) console.log(`🔄 Request to change member ID ${id} status to: ${status}`);
+
+    const allowedStatuses = ["active", "inactive", "suspend"];
+    const normalizedStatus = status?.toString().toLowerCase();
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
+        return res.status(400).json({
+            status: false,
+            message: `Invalid status. Allowed values: ${allowedStatuses.join(", ")}`,
+        });
+    }
+
+    try {
+        const result = await memberModel.getMemberById(id);
+        if (!result.status || !result.data) {
+            if (DEBUG) console.log("❌ Member not found:", id);
+            return res.status(404).json({ status: false, message: "Member not found." });
+        }
+
+        const updateResult = await memberModel.updateMember(id, { status: normalizedStatus });
+
+        if (!updateResult.status) {
+            return res.status(500).json({
+                status: false,
+                message: updateResult.message || "Failed to update status.",
+            });
+        }
+
+        if (DEBUG) console.log(`✅ Status of member ID ${id} changed to: ${normalizedStatus}`);
+
+        return res.status(200).json({
+            status: true,
+            message: `Member status updated to '${normalizedStatus}' successfully.`,
+        });
+    } catch (error) {
+        console.error("❌ Change Member Status Error:", error);
+        return res.status(500).json({
+            status: false,
+            message: "Failed to update member status. Please try again later.",
+        });
+    }
+};
+
 // ✅ Delete a member
 exports.deleteMember = async (req, res) => {
     const { id } = req.params;
-    const DEBUG = process.env.DEBUG === "true";
 
     if (DEBUG) console.log("🗑️ Request received to delete member ID:", id);
 

@@ -6,6 +6,7 @@ const {
     createMember,
     listMembers,
     updateMember,
+    changeMemberStatus,
     deleteMember,
     getMemberProfile,
 } = require("../../controllers/admin/memberController");
@@ -23,6 +24,9 @@ router.get("/:id", authMiddleware, getMemberProfile);
 
 // Update a member by ID
 router.put("/:id", upload.single("profile"), authMiddleware, updateMember);
+
+// Change status of a member by ID (e.g., active, inactive, suspend)
+router.patch("/:id/status", authMiddleware, changeMemberStatus);
 
 // Delete a member by ID
 router.delete("/:id", authMiddleware, deleteMember);

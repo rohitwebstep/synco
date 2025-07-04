@@ -52,6 +52,10 @@ const Member = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    status: {
+      type: DataTypes.ENUM("active", "inactive", "suspend"),
+      defaultValue: "active",
+    }
   },
   {
     tableName: "members",
