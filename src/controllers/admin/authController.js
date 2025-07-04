@@ -84,6 +84,7 @@ exports.verifyLogin = async (req, res) => {
 // ✅ Get admin profile
 exports.profile = async (req, res) => {
   try {
+    console.log(`req.admin - `, req.admin);
     const { status, data: admin } = await adminModel.getAdminById(req.admin.id);
 
     if (!status || !admin) {

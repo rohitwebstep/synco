@@ -30,8 +30,9 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const admin = await getAdminById(result.payload.id);
-    if (!admin) {
+    const { status, data: admin } = await getAdminById(result.payload.id);
+
+    if (!status || !admin) {
       return res
         .status(404)
         .json({ message: "Admin associated with token not found." });
