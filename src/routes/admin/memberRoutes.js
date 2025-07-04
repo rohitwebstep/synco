@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 const authMiddleware = require("../../middleware/authenticate");
 const {
     createMember,
@@ -9,8 +10,10 @@ const {
     getMemberProfile,
 } = require("../../controllers/admin/memberController");
 
+const upload = multer();
+
 // Create a new member
-router.post("/", authMiddleware, createMember);
+router.post("/", upload.single("profile"), authMiddleware, createMember);
 
 // List all members
 router.get("/", authMiddleware, listMembers);

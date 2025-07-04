@@ -4,49 +4,22 @@ const sendEmail = require("../../utils/email/sendEmail");
 
 const memberModel = require("../../services/admin/member");
 const emailModel = require("../../services/email");
-
-// ✅ Helper: Validate request fields
-const validateFields = (fields, body) => {
-    const errors = [];
-
-    for (const field of fields) {
-        const { key, required = false, type, label = key } = field;
-        const value = body[key];
-
-        if (required && (value === undefined || value === null || value === "")) {
-            errors.push(`${label} is required`);
-            continue;
-        }
-
-        if (type === "email" && value && !/^\S+@\S+\.\S+$/.test(value)) {
-            errors.push(`${label} must be a valid email`);
-        }
-    }
-
-    return errors;
-};
+const { validateFormData } = require("../../utils/validateFormData");
 
 // ✅ Create a new member
 exports.createMember = async (req, res) => {
-    const { name, email, password, position, phoneNumber, roleId } = req.body;
-
-    const validationErrors = validateFields(
-        [
-            { key: "name", required: true },
-            { key: "email", required: true, type: "email" },
-            { key: "password", required: true },
-            { key: "roleId", required: true },
-        ],
-        req.body
-    );
-
-    if (validationErrors.length > 0) {
-        return res.status(400).json({ status: false, message: "Validation failed", errors: validationErrors });
-    }
-
     try {
-        const { status: exists, data: existingMember } = await memberModel.findMemberByEmail(email);
+        const formData = req.body;
 
+        const email = formData.email;
+        const password = formData.password;
+        const name = formData.name;
+        const position = formData.position || null;
+        const phoneNumber = formData.phoneNumber || null;
+        const roleId = formData.roleId || null;
+
+        // Check if email already exists
+        const { status: exists, data: existingMember } = await memberModel.findMemberByEmail(email);
         if (exists && existingMember) {
             return res.status(409).json({
                 status: false,
@@ -54,8 +27,32 @@ exports.createMember = async (req, res) => {
             });
         }
 
+        // Validate fields
+        const validation = validateFormData(formData, {
+            requiredFields: ["name", "email", "password", "roleId"],
+            patternValidations: {
+                email: "email",
+                status: "boolean",
+            },
+        });
+
+        if (!validation.isValid) {
+            logMessage("warn", "Form validation failed", validation.error);
+            return res.status(400).json({
+                status: false,
+                error: validation.error,
+                message: validation.message,
+            });
+        }
+
+        // Convert status string to boolean
+        const statusRaw = (formData.status || "").toString().toLowerCase();
+        const status = ["true", "1", "yes", "active"].includes(statusRaw);
+
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Create member (no profile image)
         const createResult = await memberModel.createMember({
             name,
             email,
@@ -63,10 +60,15 @@ exports.createMember = async (req, res) => {
             position,
             phoneNumber,
             roleId,
+            profile: "", // No profile image handled
+            status,
         });
 
         if (!createResult.status) {
-            return res.status(500).json({ status: false, message: createResult.message || "Failed to create member." });
+            return res.status(500).json({
+                status: false,
+                message: createResult.message || "Failed to create member.",
+            });
         }
 
         return res.status(201).json({
@@ -82,6 +84,7 @@ exports.createMember = async (req, res) => {
         });
     }
 };
+
 
 // ✅ Get all members
 exports.listMembers = async (req, res) => {
