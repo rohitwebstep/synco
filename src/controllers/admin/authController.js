@@ -72,12 +72,13 @@ exports.login = async (req, res) => {
 exports.verifyLogin = async (req, res) => {
   try {
     return res.status(200).json({
+      status: true,
       message: "Login verified successfully.",
       admin: req.admin,
     });
   } catch (error) {
     console.error("❌ Verify Login Error:", error);
-    return res.status(500).json({ message: "Error verifying login. Please try again." });
+    return res.status(500).json({ status: false, message: "Error verifying login. Please try again." });
   }
 };
 
@@ -159,9 +160,9 @@ exports.forgetPassword = async (req, res) => {
     const mapRecipients = (list) =>
       Array.isArray(list)
         ? list.map(({ name, email }) => ({
-            name: replacePlaceholders(name),
-            email: replacePlaceholders(email),
-          }))
+          name: replacePlaceholders(name),
+          email: replacePlaceholders(email),
+        }))
         : [];
 
     const mailData = {

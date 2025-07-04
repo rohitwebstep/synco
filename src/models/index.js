@@ -7,6 +7,8 @@ const NotificationRecipient = require("./NotificationRecipient");
 const EmailConfig = require("./Email");
 const Member = require("./Member");
 const MemberRole = require("./MemberRole");
+const MemberPermission = require("./MemberPermission");
+const MemberHasPermission = require("./MemberHasPermission");
 
 // Define all associations **before** exporting models
 
@@ -93,6 +95,34 @@ NotificationRecipient.belongsTo(Admin, {
 Member.belongsTo(MemberRole, { foreignKey: "roleId", as: "role" });
 MemberRole.hasMany(Member, { foreignKey: "roleId", as: "members" });
 
+// 👥 Member -> MemberHasPermission
+Member.hasMany(MemberHasPermission, {
+  foreignKey: "memberId",
+  as: "permissions",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+MemberHasPermission.belongsTo(Member, {
+  foreignKey: "memberId",
+  as: "member",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+// 🔐 MemberPermission -> MemberHasPermission
+MemberPermission.hasMany(MemberHasPermission, {
+  foreignKey: "permissionId",
+  as: "memberAssignments",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+MemberHasPermission.belongsTo(MemberPermission, {
+  foreignKey: "permissionId",
+  as: "permission",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
 module.exports = {
   sequelize,
   Admin,
@@ -101,5 +131,7 @@ module.exports = {
   NotificationRecipient,
   EmailConfig,
   Member,
-  MemberRole
+  MemberRole,
+  MemberPermission,
+  MemberHasPermission
 };
