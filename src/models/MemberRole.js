@@ -16,7 +16,7 @@ const MemberRole = sequelize.define(
     },
     {
         tableName: "member_roles",
-        timestamps: false,
+        timestamps: true,
     }
 );
 

@@ -14,7 +14,6 @@ const {
 router.post("/register", register); //register route
 router.post("/login", login); // login route
 router.get("/login/verify", authMiddleware, verifyLogin); // login route
-router.get("/profile", authMiddleware, profile); // login route
 router.post("/password/forget", forgetPassword); //forgot password route
 router.post("/password/reset", verifyOtpAndResetPassword); //verify-otp and Reset-password route
 

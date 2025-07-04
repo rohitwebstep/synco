@@ -17,9 +17,9 @@ app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
 
 // Routes
-app.use("/api/admin", require("./routes/admin/authRoutes"));
-app.use("/api/admin", require("./routes/admin/profileRoutes"));
-app.use("/api/admin/member", require("./routes/admin/memberRoutes"));
+app.use("/api/admin/member", require("./routes/admin/member"));
+app.use("/api/admin/auth", require("./routes/admin/authRoutes"));
+app.use("/api/admin/profile", require("./routes/admin/profileRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 
 // Error handling middleware

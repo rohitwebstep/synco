@@ -6,6 +6,6 @@ const {
     profile
 } = require("../../controllers/admin/authController");
 
-router.get("/profile", authMiddleware, profile);
+router.get("/", authMiddleware, profile);
 
 module.exports = router;
