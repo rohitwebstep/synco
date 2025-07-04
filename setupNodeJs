@@ -1,0 +1,54 @@
+1. Firstly create package.json ->>>>>>>   npm init -y
+2. Install Dependancies  ->>>>>>> npm install express dotenv cors mysql2 sequelize nodemailer
+                               npm install --save-dev nodemon
+3. src/
+??? index.js              # ? Main entry point of your app
+??? config/               # ? Configuration files (e.g., DB connection)
+?   ??? db.js
+??? controllers/          # ? Logipc for handling request/resonse for routes
+??? models/               # ? Sequelize models (DB schemas)
+??? routes/               # ? Express route definitions
+??? middleware/           # ? Custom middleware (auth, error handling, etc.)
+??? utils/                # ? Helper functions & reusable utilities
+??? mails/                # ? Email service logic using nodemailer
+
+| Dependency   | Purpose                            | Example Usage                    |
+| ------------ | ---------------------------------- | -------------------------------- |
+| `express`    | Set up web server & routes         | `express()` + `app.get()`        |
+| `dotenv`     | Secure config (e.g., DB password)  | `require('dotenv').config()`     |
+| `cors`       | Allow cross-origin frontend access | `app.use(cors())`                |
+| `mysql2`     | MySQL driver used by Sequelize     | No direct use; used by Sequelize |
+| `sequelize`  | ORM for DB interactions            | `sequelize.define`, `.findAll()` |
+| `nodemailer` | Send email from Node.js            | `transporter.sendMail()`         |
+
+
+->>>>When a client (like Postman or a React frontend) sends data to your server via:
+    POST,PUT,PATCH
+    ...the data is usually in the body of the request.
+     But by default, Node.js/Express doesn't know how to parse that body — so req.body will be undefined.
+     command ->>>>   npm install body-parser
+
+->>>>>> 1. user table
+->>>>>> 2.CREATE TABLE notifications (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255),
+  message TEXT,
+  category ENUM('Complaints', 'Payments', 'Cancelled Memberships') NOT NULL,
+  sender_id INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification_recipients (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  notification_id INT,
+  recipient_id INT,
+  FOREIGN KEY (notification_id) REFERENCES notifications(id)
+);
+
+Use ORM
+
+JWT Implementation for Login Verify
+
+
+
+
