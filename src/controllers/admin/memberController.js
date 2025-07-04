@@ -7,10 +7,10 @@ const sendEmail = require("../../utils/email/sendEmail");
 const memberModel = require("../../services/admin/member");
 const emailModel = require("../../services/email");
 const { validateFormData } = require("../../utils/validateFormData");
-const { saveFile } = require("../../utils/fileHandler");
+const { saveFile, deleteFile } = require("../../utils/fileHandler");
 
 // Set DEBUG flag
-const DEBUG = true;
+const DEBUG = process.env.DEBUG === "true";
 
 exports.createMember = async (req, res) => {
     try {
@@ -93,7 +93,10 @@ exports.createMember = async (req, res) => {
         let savedProfilePath = "";
 
         if (file) {
-            const fileName = `${Date.now()}_${file.originalname}`;
+            const uniqueId = Math.floor(Math.random() * 1e9);
+            const ext = path.extname(file.originalname).toLowerCase();
+            const fileName = `${Date.now()}_${uniqueId}${ext}`;
+
             const fullPath = path.join(process.cwd(), "uploads", "member", `${memberId}`, "profile", fileName);
             savedProfilePath = `uploads/member/${memberId}/profile/${fileName}`;
 
@@ -130,11 +133,29 @@ exports.createMember = async (req, res) => {
 
 // ✅ Get all members
 exports.listMembers = async (req, res) => {
+    const DEBUG = process.env.DEBUG === "true";
+
+    if (DEBUG) console.log("📋 Request received to list all members");
+
     try {
         const result = await memberModel.getAllMembers();
 
         if (!result.status) {
-            return res.status(500).json({ status: false, message: result.message || "Failed to fetch members." });
+            if (DEBUG) console.log("❌ Failed to retrieve members:", result.message);
+            return res.status(500).json({
+                status: false,
+                message: result.message || "Failed to fetch members.",
+            });
+        }
+
+        if (DEBUG) {
+            console.log(`✅ Retrieved ${result.data.length} member(s)`);
+            console.table(result.data.map(m => ({
+                ID: m.id,
+                Name: m.name,
+                Email: m.email,
+                Created: m.createdAt,
+            })));
         }
 
         return res.status(200).json({
@@ -154,15 +175,25 @@ exports.listMembers = async (req, res) => {
 // ✅ Get a specific member profile
 exports.getMemberProfile = async (req, res) => {
     const { id } = req.params;
+    const DEBUG = true;
+
+    if (DEBUG) console.log("👤 Fetching member profile for ID:", id);
 
     try {
         const result = await memberModel.getMemberById(id);
 
         if (!result.status || !result.data) {
+            if (DEBUG) console.log("❌ Member not found with ID:", id);
             return res.status(404).json({ status: false, message: "Member not found." });
         }
 
         const { data: member } = result;
+
+        if (DEBUG) console.log("✅ Member found:", {
+            id: member.id,
+            name: member.name,
+            email: member.email,
+        });
 
         return res.status(200).json({
             status: true,
@@ -184,31 +215,114 @@ exports.getMemberProfile = async (req, res) => {
 // ✅ Update member details
 exports.updateMember = async (req, res) => {
     const { id } = req.params;
-    const { name, email } = req.body;
+    const formData = req.body;
+    const file = req.file;
 
-    if (!name && !email) {
-        return res.status(400).json({
-            status: false,
-            message: "At least one field (name or email) is required to update.",
-        });
-    }
+    const DEBUG = true;
+
+    if (DEBUG) console.log("🛠️ Updating member ID:", id);
+    if (DEBUG) console.log("📥 Received Update FormData:", formData);
+    if (DEBUG && file) console.log("📎 Received File:", file.originalname);
 
     try {
-        const result = await memberModel.getMemberById(id);
-        if (!result.status || !result.data) {
+        // Check if member exists
+        const existing = await memberModel.getMemberById(id);
+        if (!existing.status || !existing.data) {
+            if (DEBUG) console.log("❌ Member not found:", id);
             return res.status(404).json({ status: false, message: "Member not found." });
         }
 
-        const updateResult = await memberModel.updateMember(id, { name, email });
+        if (DEBUG) console.log("🔍 Checking if email already exists:", formData.email);
+
+        const { status: exists, data: existingMember } = await memberModel.findMemberByEmail(formData.email);
+        if (exists && existingMember && existingMember.id.toString() !== id.toString()) {
+            if (DEBUG) console.log("❌ Email already registered:", formData.email);
+            return res.status(409).json({
+                status: false,
+                message: "This email is already registered. Please use another email.",
+            });
+        }
+
+        // Validate input (if any fields sent)
+        const validation = validateFormData(formData, {
+            patternValidations: {
+                email: "email",
+                status: "boolean",
+            },
+            fileExtensionValidations: {
+                profile: ["jpg", "jpeg", "png", "webp"],
+            },
+        });
+
+        if (!validation.isValid) {
+            if (DEBUG) console.log("❌ Validation failed:", validation.error);
+            return res.status(400).json({
+                status: false,
+                error: validation.error,
+                message: validation.message,
+            });
+        }
+
+        // Prepare update data
+        const updateData = {};
+        if (formData.name) updateData.name = String(formData.name).trim();
+        if (formData.email) updateData.email = String(formData.email).trim();
+        if (formData.position) updateData.position = String(formData.position).trim();
+        if (formData.phoneNumber) updateData.phoneNumber = String(formData.phoneNumber).trim();
+        if (formData.roleId) updateData.roleId = formData.roleId;
+        if (formData.status) {
+            const statusRaw = formData.status.toString().toLowerCase();
+            updateData.status = ["true", "1", "yes", "active"].includes(statusRaw);
+        }
+
+        // Handle new profile image (if any)
+        if (file) {
+            const uniqueId = Math.floor(Math.random() * 1e9);
+            const ext = path.extname(file.originalname).toLowerCase();
+            const fileName = `${Date.now()}_${uniqueId}${ext}`;
+
+            const fullPath = path.join(process.cwd(), "uploads", "member", `${id}`, "profile", fileName);
+            const relativePath = `uploads/member/${id}/profile/${fileName}`;
+
+            if (DEBUG) console.log("📁 Saving profile to:", fullPath);
+
+            try {
+                await saveFile(file, fullPath);
+                updateData.profile = relativePath;
+
+                await deleteFile(existingMember.profile);
+                if (DEBUG) console.log("✅ Profile image saved and path set.");
+            } catch (fileErr) {
+                console.error("❌ Error saving profile image:", fileErr);
+            }
+        }
+
+        // No update fields?
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                status: false,
+                message: "No valid fields provided to update.",
+            });
+        }
+
+        // Update DB
+        const updateResult = await memberModel.updateMember(id, updateData);
 
         if (!updateResult.status) {
-            return res.status(500).json({ status: false, message: updateResult.message || "Failed to update member." });
+            if (DEBUG) console.log("❌ Failed to update member:", updateResult.message);
+            return res.status(500).json({
+                status: false,
+                message: updateResult.message || "Failed to update member.",
+            });
         }
+
+        if (DEBUG) console.log("✅ Member updated successfully.");
 
         return res.status(200).json({
             status: true,
             message: "Member updated successfully.",
         });
+
     } catch (error) {
         console.error("❌ Update Member Error:", error);
         return res.status(500).json({
@@ -221,18 +335,31 @@ exports.updateMember = async (req, res) => {
 // ✅ Delete a member
 exports.deleteMember = async (req, res) => {
     const { id } = req.params;
+    const DEBUG = process.env.DEBUG === "true";
+
+    if (DEBUG) console.log("🗑️ Request received to delete member ID:", id);
 
     try {
+        // Check if member exists
         const result = await memberModel.getMemberById(id);
+
         if (!result.status || !result.data) {
+            if (DEBUG) console.log("❌ Member not found with ID:", id);
             return res.status(404).json({ status: false, message: "Member not found." });
         }
 
+        // Delete member
         const deleteResult = await memberModel.deleteMember(id);
 
         if (!deleteResult.status) {
-            return res.status(500).json({ status: false, message: deleteResult.message || "Failed to delete member." });
+            if (DEBUG) console.log("❌ Failed to delete member:", deleteResult.message);
+            return res.status(500).json({
+                status: false,
+                message: deleteResult.message || "Failed to delete member.",
+            });
         }
+
+        if (DEBUG) console.log("✅ Member deleted successfully:", id);
 
         return res.status(200).json({
             status: true,

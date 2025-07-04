@@ -22,7 +22,7 @@ router.get("/", authMiddleware, listMembers);
 router.get("/:id", authMiddleware, getMemberProfile);
 
 // Update a member by ID
-router.put("/:id", authMiddleware, updateMember);
+router.put("/:id", upload.single("profile"), authMiddleware, updateMember);
 
 // Delete a member by ID
 router.delete("/:id", authMiddleware, deleteMember);

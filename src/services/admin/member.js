@@ -265,3 +265,31 @@ exports.updatePasswordAndClearOtp = async (memberId, hashedPassword) => {
         };
     }
 };
+
+// Delete member by ID
+exports.deleteMember = async (id) => {
+    try {
+        const result = await Member.destroy({
+            where: { id }
+        });
+
+        if (result === 0) {
+            return {
+                status: false,
+                message: "No member deleted. ID may be incorrect.",
+            };
+        }
+
+        return {
+            status: true,
+            message: "Member deleted successfully.",
+        };
+    } catch (error) {
+        console.error("❌ Sequelize Error in deleteMember:", error);
+
+        return {
+            status: false,
+            message: error?.parent?.sqlMessage || error?.message || "Failed to delete member.",
+        };
+    }
+};
