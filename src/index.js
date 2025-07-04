@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const path = require("path"); // ✅ Add path module
 const { sequelize, connectWithRetry } = require("./config/db");
 
 require("dotenv").config();
@@ -11,6 +12,9 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+// ✅ Serve static files from /uploads
+app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use("/api/admin", require("./routes/admin/authRoutes"));
