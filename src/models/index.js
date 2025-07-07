@@ -22,6 +22,7 @@ Admin.hasMany(ActivityLog, {
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
 });
+
 ActivityLog.belongsTo(Admin, {
   foreignKey: {
     name: "adminId",

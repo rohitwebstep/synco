@@ -17,7 +17,7 @@ router.use("/role", require("./roleRoutes")); // Sub-routes
 
 // Base: /api/admin/member
 router.post("/", upload.single("profile"), authMiddleware, createMember);
-router.get("/", authMiddleware, listMembers);
+router.get("/", listMembers);
 router.get("/:id", authMiddleware, getMemberProfile);
 router.put("/:id", upload.single("profile"), authMiddleware, updateMember);
 router.patch("/:id/status", authMiddleware, changeMemberStatus);

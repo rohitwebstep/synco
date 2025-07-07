@@ -9,11 +9,18 @@ const emailModel = require("../../services/email");
 const { validateFormData } = require("../../utils/validateFormData");
 const { saveFile, deleteFile } = require("../../utils/fileHandler");
 
+const { logRequestDetails } = require('../../utils/logActivity');
+
 // Set DEBUG flag
 const DEBUG = process.env.DEBUG === "true";
 
 exports.createMember = async (req, res) => {
     try {
+        logRequestDetails(req);
+        return res.status(201).json({
+            status: true,
+            message: "Stopped for log data."
+        });
         const formData = req.body;
         const file = req.file;
 
@@ -134,6 +141,12 @@ exports.createMember = async (req, res) => {
 // ✅ Get all members
 exports.listMembers = async (req, res) => {
 
+    logRequestDetails(req);
+        return res.status(201).json({
+            status: true,
+            message: "Stopped for log data."
+        });
+        
     if (DEBUG) console.log("📋 Request received to list all members");
 
     try {

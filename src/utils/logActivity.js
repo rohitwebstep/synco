@@ -1,17 +1,93 @@
-const { sequelize } = require("../config/db");
-const { QueryTypes } = require("sequelize");
+const { ActivityLog } = require("../models");
+const http = require('http');
 
-exports.logActivity = async ({ user_id, action, module, description }) => {
+exports.logRequestDetails = async (req) => {
   try {
-    await sequelize.query(
-      `INSERT INTO activity_logs (user_id, action, module, description) 
-       VALUES (?, ?, ?, ?)`,
-      {
-        replacements: [user_id, action, module, description],
-        type: QueryTypes.INSERT,
-      }
-    );
-  } catch (err) {
-    console.error("Activity logging error:", err.message);
+    // const ip =
+    //   req.headers['x-forwarded-for']?.split(',')[0] ||
+    //   req.socket?.remoteAddress ||
+    //   req.connection?.remoteAddress ||
+    //   'Unknown IP';
+
+    const ip = '139.5.0.94';
+    const apiUrl = `http://ip-api.com/json/${ip}?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query`;
+
+    // Fetch geolocation data from ip-api
+    const geoData = await fetchLocationData(apiUrl);
+    // Extract user agent details
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const { deviceType, browserName, osName } = parseUserAgent(userAgent);
+
+    const log = {
+      adminId: 1,
+      method: req.method,
+      route: req.originalUrl,
+      ip,
+      userAgent: userAgent,
+      location: {
+        latitude: geoData?.lat ?? 'N/A',
+        longitude: geoData?.lon ?? 'N/A',
+        city: geoData?.city ?? 'N/A',
+        region: geoData?.regionName ?? 'N/A',
+        country: geoData?.country ?? 'N/A',
+        timezone: geoData?.timezone ?? 'N/A',
+      },
+      ispInfo: {
+        isp: geoData?.isp ?? 'Unknown',
+        organization: geoData?.org ?? 'Unknown',
+        as: geoData?.as ?? 'Unknown',
+        proxy: geoData?.proxy ?? false,
+      },
+      deviceInfo: {
+        device_type: deviceType,
+        browser_name: browserName,
+        os: osName,
+      },
+    };
+
+    await ActivityLog.create(log);
+
+    console.log("📌 Full Request Log:", log);
+  } catch (error) {
+    console.error("❌ Error logging request:", error.message);
   }
 };
+
+// Helper: Fetch IP location data
+async function fetchLocationData(url) {
+  return new Promise((resolve, reject) => {
+    http.get(url, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          resolve(json.status === 'success' ? json : {});
+        } catch (e) {
+          resolve({});
+        }
+      });
+    }).on('error', reject);
+  });
+}
+
+// Helper: Basic user-agent parsing
+function parseUserAgent(ua) {
+  let deviceType = /mobile/i.test(ua) ? 'Mobile' : 'Desktop';
+  let browserName = 'Unknown';
+  let osName = 'Unknown';
+
+  if (/chrome/i.test(ua)) browserName = 'Chrome';
+  else if (/safari/i.test(ua)) browserName = 'Safari';
+  else if (/firefox/i.test(ua)) browserName = 'Firefox';
+  else if (/edge/i.test(ua)) browserName = 'Edge';
+  else if (/msie|trident/i.test(ua)) browserName = 'Internet Explorer';
+
+  if (/windows/i.test(ua)) osName = 'Windows';
+  else if (/mac/i.test(ua)) osName = 'macOS';
+  else if (/android/i.test(ua)) osName = 'Android';
+  else if (/linux/i.test(ua)) osName = 'Linux';
+  else if (/iphone|ipad/i.test(ua)) osName = 'iOS';
+
+  return { deviceType, browserName, osName };
+}
