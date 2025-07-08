@@ -3,6 +3,14 @@ const http = require('http');
 
 exports.logActivity = async (req, panel, module, action, data, status) => {
   try {
+
+    if (!req.adminId) {
+      return {
+        status: false,
+        message: 'adminId missing in request. Logging skipped.',
+      };
+    }
+
     // const ip =
     //   req.headers['x-forwarded-for']?.split(',')[0] ||
     //   req.socket?.remoteAddress ||
@@ -19,7 +27,7 @@ exports.logActivity = async (req, panel, module, action, data, status) => {
     const { deviceType, browserName, osName } = parseUserAgent(userAgent);
 
     const log = {
-      adminId: 1,
+      adminId: req.adminId,
       panel,
       module,
       action,
@@ -53,8 +61,18 @@ exports.logActivity = async (req, panel, module, action, data, status) => {
     await activityLog.create(log);
 
     console.log("📌 Full Request Log:", log);
+
+    return {
+      status: true,
+      message: 'Activity log saved successfully.',
+    };
   } catch (error) {
     console.error("❌ Error logging request:", error.message);
+
+    return {
+      status: false,
+      message: 'Failed to save activity log.',
+    };
   }
 };
 
