@@ -27,6 +27,7 @@ exports.createMember = async (req, res) => {
         const email = formData.email;
         const password = formData.password;
         const name = formData.name;
+        const bio = formData.bio;
         const position = formData.position || null;
         const phoneNumber = formData.phoneNumber || null;
         const roleId = formData.roleId || null;
@@ -81,6 +82,7 @@ exports.createMember = async (req, res) => {
             firstName: name,
             lastName: '',
             email,
+            bio,
             password: hashedPassword,
             position,
             phoneNumber,
@@ -244,7 +246,7 @@ exports.updateMember = async (req, res) => {
 
         // Validate input (if any fields sent)
         const validation = validateFormData(formData, {
-            requiredFields: ["firstName", "lastName", "email", "position", "phoneNumber", "roleId"],
+            requiredFields: ["firstName", "lastName", "email", "bio", "position", "phoneNumber", "roleId"],
             patternValidations: {
                 email: "email",
                 status: "boolean",
@@ -268,6 +270,7 @@ exports.updateMember = async (req, res) => {
         if (formData.firstName) updateData.firstName = String(formData.firstName).trim();
         if (formData.lastName) updateData.lastName = String(formData.lastName).trim();
         if (formData.email) updateData.email = String(formData.email).trim();
+        if (formData.bio) updateData.bio = String(formData.bio).trim();
         if (formData.position) updateData.position = String(formData.position).trim();
         if (formData.phoneNumber) updateData.phoneNumber = String(formData.phoneNumber).trim();
         if (formData.roleId) updateData.roleId = formData.roleId;

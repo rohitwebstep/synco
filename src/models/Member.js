@@ -13,9 +13,13 @@ const Member = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true, // Optional image path
     },
-    name: {
+    firstName: {
       type: DataTypes.STRING(100),
       allowNull: false,
+    },
+    lastName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING,
@@ -36,6 +40,11 @@ const Member = sequelize.define(
     phoneNumber: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: "Short member bio or introduction",
     },
     roleId: {
       type: DataTypes.INTEGER,
