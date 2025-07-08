@@ -1,7 +1,7 @@
 const { ActivityLog } = require("../../models");
 
 // Create Activity Log with validation for all required fields
-exports.createActivityLog = async (logData = {}) => {
+exports.create = async (logData = {}) => {
   try {
     const requiredFields = ["adminId", "method", "route", "ip", "userAgent"];
     const missingFields = [];
@@ -26,6 +26,11 @@ exports.createActivityLog = async (logData = {}) => {
 
     const activityLog = await ActivityLog.create({
       adminId: logData.adminId,
+      panel: logData.panel,
+      module: logData.module,
+      action: logData.action,
+      data: logData.data,
+      status: logData.status,
       method: logData.method,
       route: logData.route,
       ip: logData.ip,

@@ -9,18 +9,15 @@ const emailModel = require("../../services/email");
 const { validateFormData } = require("../../utils/validateFormData");
 const { saveFile, deleteFile } = require("../../utils/fileHandler");
 
-const { logRequestDetails } = require('../../utils/activityLog');
+const { logActivity } = require('../../utils/activityLogger');
 
 // Set DEBUG flag
 const DEBUG = process.env.DEBUG === true;
+const PANEL = 'admin';
+const MODULE = 'member';
 
 exports.createMember = async (req, res) => {
     try {
-        logRequestDetails(req);
-        return res.status(201).json({
-            status: true,
-            message: "Stopped for log data."
-        });
         const formData = req.body;
         const file = req.file;
 
@@ -39,6 +36,8 @@ exports.createMember = async (req, res) => {
         const { status: exists, data: existingMember } = await memberModel.findMemberByEmail(email);
         if (exists && existingMember) {
             if (DEBUG) console.log("❌ Email already registered:", email);
+
+            logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: 'This email is already registered. Please use another email.' }, false);
             return res.status(409).json({
                 status: false,
                 message: "This email is already registered. Please use another email.",
@@ -59,6 +58,7 @@ exports.createMember = async (req, res) => {
         });
 
         if (!validation.isValid) {
+            logActivity(req, PANEL, MODULE, 'create', validation.error, false);
             if (DEBUG) console.log("❌ Form validation failed:", validation.error);
             return res.status(400).json({
                 status: false,
@@ -89,6 +89,8 @@ exports.createMember = async (req, res) => {
         });
 
         if (!createResult.status) {
+            logActivity(req, PANEL, MODULE, 'create', createResult, false);
+
             if (DEBUG) console.log("❌ Member creation failed:", createResult.message);
             return res.status(500).json({
                 status: false,
@@ -123,6 +125,7 @@ exports.createMember = async (req, res) => {
 
         if (DEBUG) console.log("✅ Member created successfully with ID:", memberId);
 
+        logActivity(req, PANEL, MODULE, 'create', createResult, true);
         return res.status(201).json({
             status: true,
             message: "Member created successfully.",
@@ -140,13 +143,6 @@ exports.createMember = async (req, res) => {
 
 // ✅ Get all members
 exports.listMembers = async (req, res) => {
-
-    logRequestDetails(req);
-        return res.status(201).json({
-            status: true,
-            message: "Stopped for log data."
-        });
-        
     if (DEBUG) console.log("📋 Request received to list all members");
 
     try {
@@ -154,6 +150,8 @@ exports.listMembers = async (req, res) => {
 
         if (!result.status) {
             if (DEBUG) console.log("❌ Failed to retrieve members:", result.message);
+
+            logActivity(req, PANEL, MODULE, 'list', result, false);
             return res.status(500).json({
                 status: false,
                 message: result.message || "Failed to fetch members.",
@@ -170,6 +168,7 @@ exports.listMembers = async (req, res) => {
             })));
         }
 
+        logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: `Fetched ${result.data.length} member(s) successfully.` }, true);
         return res.status(200).json({
             status: true,
             message: `Fetched ${result.data.length} member(s) successfully.`,

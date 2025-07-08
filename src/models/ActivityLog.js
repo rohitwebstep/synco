@@ -15,6 +15,36 @@ const ActivityLog = sequelize.define(
       },
     },
 
+    panel: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      comment: "e.g., admin, user, vendor, etc.",
+    },
+
+    module: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      comment: "Module name like 'users', 'properties', etc.",
+    },
+
+    action: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      comment: "Action performed like 'create', 'update', 'delete', etc.",
+    },
+
+    data: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: "Payload: created/updated/deleted data",
+    },
+
+    status: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      comment: "true for success, false for failure",
+    },
+
     method: { type: DataTypes.STRING(10), allowNull: false },
     route: { type: DataTypes.STRING(255), allowNull: false },
     ip: { type: DataTypes.STRING(100), allowNull: false },
@@ -39,6 +69,7 @@ const ActivityLog = sequelize.define(
   {
     tableName: "activity_logs",
     timestamps: true,
+    updatedAt: false,
   }
 );
 

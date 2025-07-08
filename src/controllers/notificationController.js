@@ -1,5 +1,5 @@
 const notificationModel = require("../services/notification");
-const { logActivity } = require("../utils/activityLog");
+const { logActivity } = require('../utils/activityLogger');
 
 const validCategories = ["Complaints", "Payments", "Cancelled Memberships"];
 

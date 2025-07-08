@@ -1,7 +1,7 @@
 const activityLog = require("../services/admin/activityLog");
 const http = require('http');
 
-exports.logRequestDetails = async (req) => {
+exports.logActivity = async (req, panel, module, action, data, status) => {
   try {
     // const ip =
     //   req.headers['x-forwarded-for']?.split(',')[0] ||
@@ -20,6 +20,11 @@ exports.logRequestDetails = async (req) => {
 
     const log = {
       adminId: 1,
+      panel,
+      module,
+      action,
+      data,
+      status,
       method: req.method,
       route: req.originalUrl,
       ip,
@@ -45,7 +50,7 @@ exports.logRequestDetails = async (req) => {
       },
     };
 
-    await ActivityLog.create(log);
+    await activityLog.create(log);
 
     console.log("📌 Full Request Log:", log);
   } catch (error) {
