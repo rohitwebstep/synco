@@ -2,10 +2,11 @@ const { Member, MemberRole } = require("../../models");
 const { Op } = require("sequelize");
 
 // Create member
-exports.createMember = async ({ name, email, password, position, phoneNumber, roleId }) => {
+exports.createMember = async ({ firstName, lastName, email, password, position, phoneNumber, roleId }) => {
     try {
         const member = await Member.create({
-            name: String(name).trim(),
+            firstName: String(firstName).trim(),
+            lastName: String(lastName).trim(),
             email: String(email).trim(),
             password,
             position: position ? String(position).trim() : null,

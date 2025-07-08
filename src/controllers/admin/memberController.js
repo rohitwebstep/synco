@@ -78,7 +78,8 @@ exports.createMember = async (req, res) => {
         if (DEBUG) console.log("📦 Creating member...");
 
         const createResult = await memberModel.createMember({
-            name,
+            firstName: name,
+            lastName: '',
             email,
             password: hashedPassword,
             position,
@@ -243,6 +244,7 @@ exports.updateMember = async (req, res) => {
 
         // Validate input (if any fields sent)
         const validation = validateFormData(formData, {
+            requiredFields: ["firstName", "lastName", "email", "position", "phoneNumber", "roleId"],
             patternValidations: {
                 email: "email",
                 status: "boolean",
@@ -263,7 +265,8 @@ exports.updateMember = async (req, res) => {
 
         // Prepare update data
         const updateData = {};
-        if (formData.name) updateData.name = String(formData.name).trim();
+        if (formData.firstName) updateData.firstName = String(formData.firstName).trim();
+        if (formData.lastName) updateData.lastName = String(formData.lastName).trim();
         if (formData.email) updateData.email = String(formData.email).trim();
         if (formData.position) updateData.position = String(formData.position).trim();
         if (formData.phoneNumber) updateData.phoneNumber = String(formData.phoneNumber).trim();
