@@ -199,11 +199,7 @@ exports.getMemberProfile = async (req, res) => {
 
         const { data: member } = result;
 
-        if (DEBUG) console.log("✅ Member found:", {
-            id: member.id,
-            name: member.name,
-            email: member.email,
-        });
+        if (DEBUG) console.log("✅ Member found:", member);
 
         return res.status(200).json({
             status: true,
