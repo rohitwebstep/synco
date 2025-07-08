@@ -11,13 +11,13 @@ exports.logActivity = async (req, panel, module, action, data, status) => {
       };
     }
 
-    // const ip =
-    //   req.headers['x-forwarded-for']?.split(',')[0] ||
-    //   req.socket?.remoteAddress ||
-    //   req.connection?.remoteAddress ||
-    //   'Unknown IP';
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0] ||
+      req.socket?.remoteAddress ||
+      req.connection?.remoteAddress ||
+      'Unknown IP';
 
-    const ip = '139.5.0.94';
+    // const ip = '139.5.0.94';
     const apiUrl = `http://ip-api.com/json/${ip}?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query`;
 
     // Fetch geolocation data from ip-api
