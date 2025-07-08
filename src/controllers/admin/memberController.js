@@ -87,7 +87,7 @@ exports.createMember = async (req, res) => {
             position,
             phoneNumber,
             roleId,
-            profile: "", // will update later
+            profile: "",
             status,
         });
 
