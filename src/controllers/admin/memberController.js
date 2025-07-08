@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const path = require("path");
 
 const { createToken } = require("../../utils/jwt");
+const { generatePasswordHint } = require("../../utils/auth");
 const sendEmail = require("../../utils/email/sendEmail");
 
 const memberModel = require("../../services/admin/member");
@@ -82,6 +83,7 @@ exports.createMember = async (req, res) => {
             lastName: '',
             email,
             password: hashedPassword,
+            passwordHint: generatePasswordHint(password),
             position,
             phoneNumber,
             roleId,

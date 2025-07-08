@@ -33,6 +33,11 @@ const Member = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    passwordHint: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: "Masked version of original password for admin reference (e.g., Ro****ia)",
+    },
     position: {
       type: DataTypes.STRING,
       allowNull: true,
