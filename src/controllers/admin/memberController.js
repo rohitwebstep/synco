@@ -9,10 +9,10 @@ const emailModel = require("../../services/email");
 const { validateFormData } = require("../../utils/validateFormData");
 const { saveFile, deleteFile } = require("../../utils/fileHandler");
 
-const { logRequestDetails } = require('../../utils/logActivity');
+const { logRequestDetails } = require('../../utils/activityLog');
 
 // Set DEBUG flag
-const DEBUG = process.env.DEBUG === "true";
+const DEBUG = process.env.DEBUG === true;
 
 exports.createMember = async (req, res) => {
     try {

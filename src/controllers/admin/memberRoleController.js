@@ -1,7 +1,7 @@
 const { validateFormData } = require("../../utils/validateFormData");
 const memberRoleModel = require("../../services/admin/memberRole");
 
-const DEBUG = process.env.DEBUG === "true";
+const DEBUG = process.env.DEBUG === true;
 
 // ✅ Create Role
 exports.createRole = async (req, res) => {

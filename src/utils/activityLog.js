@@ -1,4 +1,4 @@
-const { ActivityLog } = require("../models");
+const activityLog = require("../services/admin/activityLog");
 const http = require('http');
 
 exports.logRequestDetails = async (req) => {
