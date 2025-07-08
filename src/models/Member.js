@@ -41,11 +41,6 @@ const Member = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    bio: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: "Short member bio or introduction",
-    },
     roleId: {
       type: DataTypes.INTEGER,
       references: {

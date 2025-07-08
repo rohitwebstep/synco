@@ -27,10 +27,9 @@ exports.createMember = async (req, res) => {
         const email = formData.email;
         const password = formData.password;
         const name = formData.name;
-        const bio = formData.bio;
         const position = formData.position || null;
         const phoneNumber = formData.phoneNumber || null;
-        const roleId = formData.roleId || null;
+        const roleId = formData.role || null;
 
         if (DEBUG) console.log("🔍 Checking if email already exists:", email);
 
@@ -48,7 +47,7 @@ exports.createMember = async (req, res) => {
         if (DEBUG) console.log("✅ Email is available");
 
         const validation = validateFormData(formData, {
-            requiredFields: ["name", "email", "password", "roleId"],
+            requiredFields: ["name", "email", "password", "role"],
             patternValidations: {
                 email: "email",
                 status: "boolean",
@@ -82,7 +81,6 @@ exports.createMember = async (req, res) => {
             firstName: name,
             lastName: '',
             email,
-            bio,
             password: hashedPassword,
             position,
             phoneNumber,
@@ -246,7 +244,7 @@ exports.updateMember = async (req, res) => {
 
         // Validate input (if any fields sent)
         const validation = validateFormData(formData, {
-            requiredFields: ["firstName", "lastName", "email", "bio", "position", "phoneNumber", "roleId"],
+            requiredFields: ["firstName", "lastName", "email", "position", "phoneNumber"],
             patternValidations: {
                 email: "email",
                 status: "boolean",
@@ -270,10 +268,9 @@ exports.updateMember = async (req, res) => {
         if (formData.firstName) updateData.firstName = String(formData.firstName).trim();
         if (formData.lastName) updateData.lastName = String(formData.lastName).trim();
         if (formData.email) updateData.email = String(formData.email).trim();
-        if (formData.bio) updateData.bio = String(formData.bio).trim();
         if (formData.position) updateData.position = String(formData.position).trim();
         if (formData.phoneNumber) updateData.phoneNumber = String(formData.phoneNumber).trim();
-        if (formData.roleId) updateData.roleId = formData.roleId;
+        if (formData.roleId) updateData.roleId = formData.role;
         if (formData.status) {
             const statusRaw = formData.status.toString().toLowerCase();
             updateData.status = ["true", "1", "yes", "active"].includes(statusRaw);
