@@ -208,13 +208,7 @@ exports.getMemberProfile = async (req, res) => {
         return res.status(200).json({
             status: true,
             message: "Member profile retrieved successfully.",
-            data: {
-                id: member.id,
-                name: member.name,
-                email: member.email,
-                createdAt: member.createdAt,
-                updatedAt: member.updatedAt,
-            },
+            data: member,
         });
     } catch (error) {
         console.error("❌ Get Member Profile Error:", error);

@@ -61,6 +61,13 @@ exports.getMemberById = async (id) => {
         const member = await Member.findOne({
             where: { id },
             attributes: { exclude: ["password", "resetOtp", "resetOtpExpiry"] },
+            include: [
+                {
+                    model: MemberRole,
+                    as: 'role',
+                    attributes: ['id', 'role'],
+                },
+            ],
         });
 
         if (!member) {
