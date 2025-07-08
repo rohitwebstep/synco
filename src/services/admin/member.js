@@ -1,4 +1,4 @@
-const { Member } = require("../../models");
+const { Member, MemberRole } = require("../../models");
 const { Op } = require("sequelize");
 
 // Create member
@@ -118,6 +118,13 @@ exports.getAllMembers = async () => {
     try {
         const members = await Member.findAll({
             attributes: { exclude: ["password", "resetOtp", "resetOtpExpiry"] },
+            include: [
+                {
+                    model: MemberRole,
+                    as: 'role',
+                    attributes: ['id', 'role'],
+                },
+            ],
             order: [["createdAt", "DESC"]],
         });
 
