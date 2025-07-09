@@ -1,16 +1,16 @@
 const bcrypt = require("bcrypt");
 const path = require("path");
 
-const { createToken } = require("../../utils/jwt");
-const { generatePasswordHint } = require("../../utils/auth");
-const sendEmail = require("../../utils/email/sendEmail");
+const { createToken } = require("../../../utils/jwt");
+const { generatePasswordHint } = require("../../../utils/auth");
+const sendEmail = require("../../../utils/email/sendEmail");
 
-const memberModel = require("../../services/admin/member");
-const emailModel = require("../../services/email");
-const { validateFormData } = require("../../utils/validateFormData");
-const { saveFile, deleteFile } = require("../../utils/fileHandler");
+const memberModel = require("../../../services/admin/member");
+const emailModel = require("../../../services/email");
+const { validateFormData } = require("../../../utils/validateFormData");
+const { saveFile, deleteFile } = require("../../../utils/fileHandler");
 
-const { logActivity } = require('../../utils/admin/activityLogger');
+const { logActivity } = require('../../../utils/admin/activityLogger');
 
 // Set DEBUG flag
 const DEBUG = process.env.DEBUG === true;

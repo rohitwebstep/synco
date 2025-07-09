@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../../middleware/admin/authenticate");
+const authMiddleware = require("../../../middleware/admin/authenticate");
 
 const {
   createPaymentGroup,
@@ -8,11 +8,11 @@ const {
   getPaymentGroupById,
   updatePaymentGroup,
   deletePaymentGroup,
-} = require("../../controllers/admin/paymentGroupController");
+} = require("../../../controllers/admin/payment/paymentGroupController");
 
 const {
   assignPlansToPaymentGroup,
-} = require("../../controllers/admin/paymentGroupHasPlanController");
+} = require("../../../controllers/admin/payment/paymentGroupHasPlanController");
 
 // 🔐 Create a new payment group (Protected)
 router.post("/", authMiddleware, createPaymentGroup);

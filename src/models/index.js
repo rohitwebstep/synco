@@ -1,29 +1,29 @@
 const { sequelize } = require("../config/db");
 
 // ====================== Model Imports ====================== //
-const Admin = require("./Admin");
-const ActivityLog = require("./ActivityLog");
+const Admin = require("./admin/Admin");
+const ActivityLog = require("./admin/ActivityLog");
 const EmailConfig = require("./Email");
 
-const Member = require("./member/Member");
-const MemberRole = require("./member/MemberRole");
-const MemberPermission = require("./member/MemberPermission");
-const MemberHasPermission = require("./member/MemberHasPermission");
+const Member = require("./admin/member/Member");
+const MemberRole = require("./admin/member/MemberRole");
+const MemberPermission = require("./admin/member/MemberPermission");
+const MemberHasPermission = require("./admin/member/MemberHasPermission");
 
-const Notification = require("./notification/Notification");
-const NotificationRead = require("./notification/NotificationRead");
+const Notification = require("./admin/notification/Notification");
+const NotificationRead = require("./admin/notification/NotificationRead");
 
-const PaymentPlan = require("./payment/PaymentPlan");
-const PaymentGroup = require("./payment/PaymentGroup");
-const PaymentGroupHasPlan = require("./payment/PaymentGroupHasPlan");
+const PaymentPlan = require("./admin/payment/PaymentPlan");
+const PaymentGroup = require("./admin/payment/PaymentGroup");
+const PaymentGroupHasPlan = require("./admin/payment/PaymentGroupHasPlan");
 
-const Discount = require("./discount/Discount");
-const DiscountAppliesTo = require("./discount/DiscountAppliesTo");
-const DiscountUsage = require("./discount/DiscountUsage");
+const Discount = require("./admin/discount/Discount");
+const DiscountAppliesTo = require("./admin/discount/DiscountAppliesTo");
+const DiscountUsage = require("./admin/discount/DiscountUsage");
 
-const Country = require("./location/Country");
-const State = require("./location/State");
-const City = require("./location/City");
+const Country = require("./admin/location/Country");
+const State = require("./admin/location/State");
+const City = require("./admin/location/City");
 
 // ====================== Model Associations ====================== //
 

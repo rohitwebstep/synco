@@ -8,7 +8,7 @@ const {
   getMemberRoleById,
   updateMemberRole,
   deleteMemberRole
-} = require("../../../controllers/admin/memberRoleController");
+} = require("../../../controllers/admin/member/memberRoleController");
 
 // Base: /api/admin/member/role
 router.post("/", authMiddleware, createMemberRole);

@@ -1,6 +1,6 @@
 // models/PaymentGroup.js
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../../config/db");
+const { sequelize } = require("../../../config/db");
 
 const PaymentGroup = sequelize.define("PaymentGroup", {
   name: {

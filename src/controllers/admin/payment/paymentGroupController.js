@@ -1,6 +1,6 @@
-const paymentGroupModel = require("../../services/admin/paymentGroup");
-const { validateFormData } = require("../../utils/validateFormData");
-const { logActivity } = require("../../utils/admin/activityLogger");
+const paymentGroupModel = require("../../../services/admin/paymentGroup");
+const { validateFormData } = require("../../../utils/validateFormData");
+const { logActivity } = require("../../../utils/admin/activityLogger");
 
 const DEBUG = process.env.DEBUG === "true";
 const PANEL = 'admin';

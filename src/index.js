@@ -27,8 +27,8 @@ app.use("/api/admin/members", require("./routes/admin/member"));           // Ma
 app.use("/api/admin/notification", require("./routes/admin/notificationRoutes"));  // Notifications (CRUD, read status)
 
 // ✅ Payments
-app.use("/api/admin/payment-plan", require("./routes/admin/paymentPlanRoutes"));         // Plan definitions
-app.use("/api/admin/payment-group", require("./routes/admin/paymentGroupRoutes"));       // Group definitions
+app.use("/api/admin/payment-plan", require("./routes/admin/payment/paymentPlanRoutes"));         // Plan definitions
+app.use("/api/admin/payment-group", require("./routes/admin/payment/paymentGroupRoutes"));       // Group definitions
 
 // ✅ Discounts
 app.use("/api/admin/discount", require("./routes/admin/discountRoutes"));  // Discount logic

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../../middleware/admin/authenticate");
+const authMiddleware = require("../../../middleware/admin/authenticate");
 
 const {
   createPaymentPlan,
@@ -8,7 +8,7 @@ const {
   getPaymentPlanById,
   updatePaymentPlan,
   deletePaymentPlan,
-} = require("../../controllers/admin/paymentPlanController");
+} = require("../../../controllers/admin/payment/paymentPlanController");
 
 // 🔐 Create a new payment plan (Protected)
 router.post("/", authMiddleware, createPaymentPlan);

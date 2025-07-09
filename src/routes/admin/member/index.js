@@ -8,7 +8,7 @@ const {
     changeMemberStatus,
     deleteMember,
     getMemberProfile
-} = require("../../../controllers/admin/memberController");
+} = require("../../../controllers/admin/member/memberController");
 
 const multer = require("multer");
 const upload = multer();

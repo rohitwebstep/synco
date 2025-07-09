@@ -1,4 +1,4 @@
-const PaymentGroupHasPlan = require("../../models/PaymentGroupHasPlan");
+const PaymentGroupHasPlan = require("../../models/admin/payment/PaymentGroupHasPlan");
 
 // ✅ Assign a plan to a group (ensures uniqueness)
 exports.assignPlanToPaymentGroup = async (groupId, planId) => {

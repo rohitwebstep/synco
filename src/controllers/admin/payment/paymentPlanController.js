@@ -1,6 +1,6 @@
-const { validateFormData } = require("../../utils/validateFormData");
-const PaymentPlan = require("../../services/admin/paymentPlan");
-const { logActivity } = require("../../utils/admin/activityLogger");
+const { validateFormData } = require("../../../utils/validateFormData");
+const PaymentPlan = require("../../../services/admin/paymentPlan");
+const { logActivity } = require("../../../utils/admin/activityLogger");
 
 const DEBUG = process.env.DEBUG === "true";
 const PANEL = 'admin';
