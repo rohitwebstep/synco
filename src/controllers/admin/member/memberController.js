@@ -282,7 +282,7 @@ exports.updateMember = async (req, res) => {
         if (formData.role) updateData.roleId = formData.role;
         if (formData.country) updateData.countryId = formData.country;
         if (formData.state) updateData.stateId = formData.state;
-        if (formData.city) updateData.cityId = formData.city;
+        if (formData.city) updateData.city = formData.city;
         if (formData.status) {
             const statusRaw = formData.status.toString().toLowerCase();
             updateData.status = ["true", "1", "yes", "active"].includes(statusRaw);
