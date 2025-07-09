@@ -1,7 +1,23 @@
 const notificationModel = require("../../services/admin/notification");
 const { logActivity } = require("../../utils/admin/activityLogger");
 
-const validCategories = ["Complaints", "Payments", "Cancelled Memberships"];
+const validCategories = [
+  "Complaints",
+  "Payments",
+  "Cancelled Memberships",
+  "Members",
+  "Member Roles",
+  "System",
+  "Activity Logs",
+  "Security",
+  "Login",
+  "Settings",
+  "Updates",
+  "Announcements",
+  "Tasks",
+  "Messages",
+  "Support"
+];
 const DEBUG = process.env.DEBUG === "true";
 
 const PANEL = 'admin';

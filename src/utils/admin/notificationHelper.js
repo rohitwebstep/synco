@@ -32,7 +32,24 @@ exports.createNotification = async (req, title, description, category, scope = '
         return { status: false, message };
     }
 
-    const validCategories = ["Complaints", "Payments", "Cancelled Memberships"];
+    const validCategories = [
+        "Complaints",
+        "Payments",
+        "Cancelled Memberships",
+        "Members",
+        "Member Roles",
+        "System",
+        "Activity Logs",
+        "Security",
+        "Login",
+        "Settings",
+        "Updates",
+        "Announcements",
+        "Tasks",
+        "Messages",
+        "Support"
+    ];
+    
     if (!validCategories.includes(category)) {
         const message = `Invalid category. Allowed categories: ${validCategories.join(", ")}`;
         if (DEBUG) console.warn(`🚫 ${message}`);
