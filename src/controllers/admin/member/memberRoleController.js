@@ -45,7 +45,7 @@ exports.createMemberRole = async (req, res) => {
             });
         }
 
-        const successMessage = `New member Role '${role}' created successfully by Admin ID: ${adminId}`;
+        const successMessage = `New member Role '${role}' created successfully by Admin ID: ${req.admin.id}`;
         if (DEBUG) console.log("✅", successMessage);
 
         await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: `Role "${role}" created.` }, true);
