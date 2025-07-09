@@ -127,7 +127,7 @@ exports.createMember = async (req, res) => {
             if (DEBUG) console.log("ℹ️ No file uploaded, skipping file save.");
         }
 
-        const successMessage = `New member '${name}' created successfully by Admin ID: ${adminId}`;
+        const successMessage = `New member '${name}' created successfully by Admin ID: ${req.admin.id}`;
         if (DEBUG) console.log("✅", successMessage);
 
         await logActivity(req, PANEL, MODULE, 'create', createResult, true);
