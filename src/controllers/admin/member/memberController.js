@@ -81,14 +81,12 @@ exports.createMember = async (req, res) => {
 
         const createResult = await memberModel.createMember({
             firstName: name,
-            lastName: '',
             email,
             password: hashedPassword,
             passwordHint: generatePasswordHint(password),
             position,
             phoneNumber,
             roleId,
-            profile: "",
             status,
         });
 
