@@ -250,7 +250,7 @@ exports.updateMember = async (req, res) => {
 
         // Validate input (if any fields sent)
         const validation = validateFormData(formData, {
-            requiredFields: ["firstName", "email", "position", "phoneNumber", "country", "state", "city"],
+            requiredFields: ["firstName", "email", "position", "phoneNumber", "country", "city"],
             patternValidations: {
                 email: "email",
                 status: "boolean",

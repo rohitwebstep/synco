@@ -130,33 +130,35 @@ Country.hasMany(Member, {
   onUpdate: "CASCADE",
 });
 
-// Member ↔ State
-Member.belongsTo(State, {
-  foreignKey: "stateId",
-  as: "state",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
-State.hasMany(Member, {
-  foreignKey: "stateId",
-  as: "membersFromState",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
+/*
+  // Member ↔ State
+  Member.belongsTo(State, {
+    foreignKey: "stateId",
+    as: "state",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
+  State.hasMany(Member, {
+    foreignKey: "stateId",
+    as: "membersFromState",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
 
-// Member ↔ City
-Member.belongsTo(City, {
-  foreignKey: "cityId",
-  as: "city",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
-City.hasMany(Member, {
-  foreignKey: "cityId",
-  as: "membersFromCity",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
+  // Member ↔ City
+  Member.belongsTo(City, {
+    foreignKey: "cityId",
+    as: "city",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
+  City.hasMany(Member, {
+    foreignKey: "cityId",
+    as: "membersFromCity",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
+*/
 
 
 /* 💳 PaymentGroup ↔ PaymentPlan (Many-to-Many) */

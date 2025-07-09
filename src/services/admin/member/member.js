@@ -73,16 +73,18 @@ exports.getMemberById = async (id) => {
                     as: 'country',
                     attributes: ['id', 'name'],
                 },
-                {
-                    model: State,
-                    as: 'state',
-                    attributes: ['id', 'name'],
-                },
-                {
-                    model: City,
-                    as: 'city',
-                    attributes: ['id', 'name'],
-                },
+                /*
+                    {
+                        model: State,
+                        as: 'state',
+                        attributes: ['id', 'name'],
+                    },
+                    {
+                        model: City,
+                        as: 'city',
+                        attributes: ['id', 'name'],
+                    },
+                */
             ],
         });
 

@@ -82,7 +82,7 @@ const Member = sequelize.define(
     },
     city: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
     },
     resetOtp: {
       type: DataTypes.STRING(10),
