@@ -60,7 +60,7 @@ function validateFormData(formData, options = {}) {
                     isValid = !isNaN(Number(val));
                     break;
                 case 'boolean':
-                    isValid = ['true', 'false', '1', '0', 'yes', 'no', 'active', 'inactive'].includes(valStr);
+                    isValid = ['true', 'false', '1', '0', 'yes', 'no', 'active', 'inactive'].includes(valStr.toLowerCase());
                     break;
                 case 'url':
                     isValid = isValidURL(val);
@@ -68,10 +68,26 @@ function validateFormData(formData, options = {}) {
                 case 'phone':
                     isValid = isValidPhone(val);
                     break;
+                case 'string':
+                    isValid = typeof val === 'string' && val.trim() !== '';
+                    break;
+                case 'alphanumeric':
+                    isValid = /^[a-z0-9]+$/i.test(valStr);
+                    break;
+                case 'date':
+                    isValid = /^\d{4}-\d{2}-\d{2}$/.test(valStr) && !isNaN(Date.parse(valStr));
+                    break;
+                case 'time':
+                    isValid = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(valStr);
+                    break;
+                case 'datetime':
+                    isValid = !isNaN(Date.parse(valStr));
+                    break;
                 default:
-                    // No pattern check for unknown rule
+                    isValid = true;
                     break;
             }
+
 
             if (!isValid) {
                 error[field] = `${toReadableFieldName(field)} must be a valid ${rule}.`;

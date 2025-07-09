@@ -24,9 +24,8 @@ const DiscountAppliesTo = sequelize.define(
         },
         target: {
             type: DataTypes.ENUM(
-                'weekly_classes',
                 'joining_fee',
-                'no_roto_lessons',
+                'pro_roto_lessons',
                 'uniform_fee',
                 'one_to_one',
                 'holiday_camp',

@@ -21,7 +21,7 @@ app.use("/api/admin/auth", require("./routes/admin/authRoutes"));          // Lo
 app.use("/api/admin/profile", require("./routes/admin/profileRoutes"));    // Admin profile CRUD
 
 // ✅ Member Management
-app.use("/api/admin/members", require("./routes/admin/member"));           // Manage members
+app.use("/api/admin/member", require("./routes/admin/member"));           // Manage members
 
 // ✅ Notifications
 app.use("/api/admin/notification", require("./routes/admin/notificationRoutes"));  // Notifications (CRUD, read status)

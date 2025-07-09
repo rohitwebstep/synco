@@ -1,11 +1,11 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
+const authMiddleware = require("../../middleware/admin/authenticate");
 
-router.get("/", function (req, res) {
-    res.json({
-        status: true,
-        message: "discount request"
-    });
-});
+const {
+    createDiscount
+} = require("../../controllers/admin/discountController");
+
+router.post("/", authMiddleware, createDiscount);
 
 module.exports = router;
