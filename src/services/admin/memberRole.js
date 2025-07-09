@@ -1,7 +1,7 @@
 const { MemberRole } = require("../../models");
 
 // ✅ Create a role
-exports.createRole = async ({ role }) => {
+exports.createMemberRole = async ({ role }) => {
     try {
         const newRole = await MemberRole.create({ role: role.trim() });
 
@@ -21,7 +21,7 @@ exports.createRole = async ({ role }) => {
 };
 
 // ✅ Find role by name
-exports.findRoleByRole = async (role) => {
+exports.findMemberRoleByRole = async (role) => {
     try {
         const existingRole = await MemberRole.findOne({ where: { role } });
 
@@ -48,7 +48,7 @@ exports.findRoleByRole = async (role) => {
 };
 
 // ✅ Get all roles
-exports.getAllRoles = async () => {
+exports.getAllMemberRoles = async () => {
     try {
         const roles = await MemberRole.findAll({
             order: [["createdAt", "DESC"]],
@@ -70,7 +70,7 @@ exports.getAllRoles = async () => {
 };
 
 // ✅ Get role by ID
-exports.getRoleById = async (id) => {
+exports.getMemberRoleById = async (id) => {
     try {
         const role = await MemberRole.findByPk(id);
 
@@ -97,7 +97,7 @@ exports.getRoleById = async (id) => {
 };
 
 // ✅ Update role
-exports.updateRole = async (id, updateData) => {
+exports.updateMemberRole = async (id, updateData) => {
     try {
         const [updated] = await MemberRole.update(updateData, { where: { id } });
 
@@ -123,7 +123,7 @@ exports.updateRole = async (id, updateData) => {
 };
 
 // ✅ Delete role
-exports.deleteRole = async (id) => {
+exports.deleteMemberRole = async (id) => {
     try {
         const deleted = await MemberRole.destroy({ where: { id } });
 

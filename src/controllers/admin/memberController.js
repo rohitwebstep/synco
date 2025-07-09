@@ -10,7 +10,7 @@ const emailModel = require("../../services/email");
 const { validateFormData } = require("../../utils/validateFormData");
 const { saveFile, deleteFile } = require("../../utils/fileHandler");
 
-const { logActivity } = require('../../utils/activityLogger');
+const { logActivity } = require('../../utils/admin/activityLogger');
 
 // Set DEBUG flag
 const DEBUG = process.env.DEBUG === true;
@@ -145,7 +145,7 @@ exports.createMember = async (req, res) => {
 };
 
 // ✅ Get all members
-exports.listMembers = async (req, res) => {
+exports.getAllMembers = async (req, res) => {
     if (DEBUG) console.log("📋 Request received to list all members");
 
     try {

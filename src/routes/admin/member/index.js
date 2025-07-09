@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../../../middleware/authenticate");
+const authMiddleware = require("../../../middleware/admin/authenticate");
 const {
     createMember,
-    listMembers,
+    getAllMembers,
     updateMember,
     changeMemberStatus,
     deleteMember,
@@ -17,7 +17,7 @@ router.use("/role", require("./roleRoutes")); // Sub-routes
 
 // Base: /api/admin/member
 router.post("/", upload.single("profile"), authMiddleware, createMember);
-router.get("/", listMembers);
+router.get("/", getAllMembers);
 router.get("/:id", authMiddleware, getMemberProfile);
 router.put("/:id", upload.single("profile"), authMiddleware, updateMember);
 router.patch("/:id/status", authMiddleware, changeMemberStatus);

@@ -1,5 +1,5 @@
-const { getAdminById } = require("../services/admin/admin");
-const { verifyToken } = require("../utils/jwt");
+const { getAdminById } = require("../../services/admin/admin");
+const { verifyToken } = require("../../utils/jwt");
 
 /**
  * Middleware to authenticate admins using JWT.

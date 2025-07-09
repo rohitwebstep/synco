@@ -1,9 +1,17 @@
 const { sequelize } = require("./config/db");
-const models = require("./models"); // This will automatically register all models and associations
+require("./models"); // Automatically registers models and associations
 
 (async () => {
   try {
-    await sequelize.sync({ force: true }); // use { force: true } to drop & recreate
+    // 🔐 Disable FK constraints temporarily
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+
+    // 🔁 Drop and recreate all tables
+    await sequelize.sync({ force: true });
+
+    // ✅ Re-enable FK constraints
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+
     console.log("✅ All models were synchronized successfully.");
     process.exit(0);
   } catch (err) {

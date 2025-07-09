@@ -16,11 +16,22 @@ app.use(bodyParser.json());
 // ✅ Serve static files from /uploads
 app.use('/uploads', express.static('uploads'));
 
-// Routes
-app.use("/api/admin/member", require("./routes/admin/member"));
-app.use("/api/admin/auth", require("./routes/admin/authRoutes"));
-app.use("/api/admin/profile", require("./routes/admin/profileRoutes"));
-app.use("/api/notifications", require("./routes/notificationRoutes"));
+// ✅ Auth & Profile
+app.use("/api/admin/auth", require("./routes/admin/authRoutes"));          // Login, Logout, etc.
+app.use("/api/admin/profile", require("./routes/admin/profileRoutes"));    // Admin profile CRUD
+
+// ✅ Member Management
+app.use("/api/admin/members", require("./routes/admin/member"));           // Manage members
+
+// ✅ Notifications
+app.use("/api/admin/notification", require("./routes/admin/notificationRoutes"));  // Notifications (CRUD, read status)
+
+// ✅ Payments
+app.use("/api/admin/payment-plan", require("./routes/admin/paymentPlanRoutes"));         // Plan definitions
+app.use("/api/admin/payment-group", require("./routes/admin/paymentGroupRoutes"));       // Group definitions
+
+// ✅ Discounts
+app.use("/api/admin/discount", require("./routes/admin/discountRoutes"));  // Discount logic
 
 // Error handling middleware
 app.use((err, req, res, next) => {

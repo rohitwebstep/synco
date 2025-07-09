@@ -1,18 +1,36 @@
+// models/Notification.js
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db");
 
 const Notification = sequelize.define(
   "Notification",
   {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    title: DataTypes.STRING(255),
-    message: DataTypes.TEXT,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    title: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     category: {
       type: DataTypes.ENUM("Complaints", "Payments", "Cancelled Memberships"),
       allowNull: false,
     },
-    senderId: DataTypes.INTEGER,
-    createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    adminId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     tableName: "notifications",

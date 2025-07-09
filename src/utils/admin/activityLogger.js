@@ -1,10 +1,10 @@
-const activityLog = require("../services/admin/activityLog");
+const activityLog = require("../../services/admin/activityLog");
 const http = require('http');
 
 exports.logActivity = async (req, panel, module, action, data, status) => {
   try {
 
-    if (!req.adminId) {
+    if (!req.admin.id) {
       return {
         status: false,
         message: 'adminId missing in request. Logging skipped.',
@@ -27,7 +27,7 @@ exports.logActivity = async (req, panel, module, action, data, status) => {
     const { deviceType, browserName, osName } = parseUserAgent(userAgent);
 
     const log = {
-      adminId: req.adminId,
+      adminId: req.admin.id,
       panel,
       module,
       action,
