@@ -246,10 +246,13 @@ exports.updateMember = async (req, res) => {
 
         // Validate input (if any fields sent)
         const validation = validateFormData(formData, {
-            requiredFields: ["firstName", "lastName", "email", "position", "phoneNumber"],
+            requiredFields: ["firstName", "email", "position", "phoneNumber", "country", "state", "city"],
             patternValidations: {
                 email: "email",
                 status: "boolean",
+                country: "number",
+                state: "number",
+                city: "number",
             },
             fileExtensionValidations: {
                 profile: ["jpg", "jpeg", "png", "webp"],
@@ -272,7 +275,10 @@ exports.updateMember = async (req, res) => {
         if (formData.email) updateData.email = String(formData.email).trim();
         if (formData.position) updateData.position = String(formData.position).trim();
         if (formData.phoneNumber) updateData.phoneNumber = String(formData.phoneNumber).trim();
-        if (formData.roleId) updateData.roleId = formData.role;
+        if (formData.role) updateData.roleId = formData.role;
+        if (formData.country) updateData.countryId = formData.country;
+        if (formData.state) updateData.stateId = formData.state;
+        if (formData.city) updateData.cityId = formData.city;
         if (formData.status) {
             const statusRaw = formData.status.toString().toLowerCase();
             updateData.status = ["true", "1", "yes", "active"].includes(statusRaw);

@@ -53,6 +53,33 @@ const Member = sequelize.define(
         key: "id",
       },
     },
+    countryId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "countries",
+        key: "id",
+      },
+      field: "country_id"
+    },
+    stateId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "states",
+        key: "id",
+      },
+      field: "state_id"
+    },
+    cityId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "cities",
+        key: "id",
+      },
+      field: "city_id"
+    },
     resetOtp: {
       type: DataTypes.STRING(10),
       allowNull: true,

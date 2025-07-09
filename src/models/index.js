@@ -1,31 +1,39 @@
 const { sequelize } = require("../config/db");
 
-// ====================== Model Imports ====================== //
+// ====================== 🌐 Core Models ====================== //
 const Admin = require("./admin/Admin");
-const ActivityLog = require("./admin/ActivityLog");
 const EmailConfig = require("./Email");
 
+// ====================== 📋 Activity & Logs ====================== //
+const ActivityLog = require("./admin/ActivityLog");
+
+// ====================== 👥 Member & Roles ====================== //
 const Member = require("./admin/member/Member");
 const MemberRole = require("./admin/member/MemberRole");
 const MemberPermission = require("./admin/member/MemberPermission");
 const MemberHasPermission = require("./admin/member/MemberHasPermission");
 
+// ====================== 🔔 Notifications ====================== //
 const Notification = require("./admin/notification/Notification");
 const NotificationRead = require("./admin/notification/NotificationRead");
 
+// ====================== 💳 Payment System ====================== //
 const PaymentPlan = require("./admin/payment/PaymentPlan");
 const PaymentGroup = require("./admin/payment/PaymentGroup");
 const PaymentGroupHasPlan = require("./admin/payment/PaymentGroupHasPlan");
 
+// ====================== 🎟️ Discount System ====================== //
 const Discount = require("./admin/discount/Discount");
 const DiscountAppliesTo = require("./admin/discount/DiscountAppliesTo");
 const DiscountUsage = require("./admin/discount/DiscountUsage");
 
+// ====================== 🌍 Location System ====================== //
 const Country = require("./admin/location/Country");
 const State = require("./admin/location/State");
 const City = require("./admin/location/City");
 
-// ====================== Model Associations ====================== //
+
+// ====================== 🔗 Model Associations ====================== //
 
 /* 🌐 Admin Relations */
 
@@ -67,6 +75,7 @@ NotificationRead.belongsTo(Admin, {
   as: "admin",
 });
 
+
 /* 👥 Member Relations */
 
 // Member ↔ Role
@@ -107,6 +116,49 @@ MemberHasPermission.belongsTo(MemberPermission, {
   onUpdate: "CASCADE",
 });
 
+// Member ↔ Country
+Member.belongsTo(Country, {
+  foreignKey: "countryId",
+  as: "country",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+Country.hasMany(Member, {
+  foreignKey: "countryId",
+  as: "membersFromCountry",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+// Member ↔ State
+Member.belongsTo(State, {
+  foreignKey: "stateId",
+  as: "state",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+State.hasMany(Member, {
+  foreignKey: "stateId",
+  as: "membersFromState",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+// Member ↔ City
+Member.belongsTo(City, {
+  foreignKey: "cityId",
+  as: "city",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+City.hasMany(Member, {
+  foreignKey: "cityId",
+  as: "membersFromCity",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+
 /* 💳 PaymentGroup ↔ PaymentPlan (Many-to-Many) */
 
 PaymentGroup.belongsToMany(PaymentPlan, {
@@ -121,6 +173,7 @@ PaymentPlan.belongsToMany(PaymentGroup, {
   otherKey: "payment_group_id",
   as: "groups",
 });
+
 
 /* 🌍 Location Relations */
 
@@ -166,7 +219,8 @@ City.belongsTo(Country, {
   onUpdate: "CASCADE",
 });
 
-/* 🎟️ Discount System Relations */
+
+/* 🎟️ Discount System */
 
 // Discount ↔ DiscountAppliesTo
 Discount.hasMany(DiscountAppliesTo, {
@@ -204,25 +258,31 @@ DiscountUsage.belongsTo(Member, {
   onDelete: "CASCADE",
 });
 
-// ====================== Module Exports ====================== //
+
+// ====================== 📦 Module Exports ====================== //
 module.exports = {
   sequelize,
   Admin,
   ActivityLog,
   EmailConfig,
+
   Member,
   MemberRole,
   MemberPermission,
   MemberHasPermission,
+
   Notification,
   NotificationRead,
+
   PaymentPlan,
   PaymentGroup,
   PaymentGroupHasPlan,
+
   Discount,
   DiscountAppliesTo,
   DiscountUsage,
+
   Country,
   State,
-  City
+  City,
 };

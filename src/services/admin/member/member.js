@@ -1,4 +1,4 @@
-const { Member, MemberRole } = require("../../../models");
+const { Member, MemberRole, Country, State, City } = require("../../../models");
 const { Op } = require("sequelize");
 
 // Create member
@@ -67,6 +67,21 @@ exports.getMemberById = async (id) => {
                     model: MemberRole,
                     as: 'role',
                     attributes: ['id', 'role'],
+                },
+                {
+                    model: Country,
+                    as: 'country',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: State,
+                    as: 'state',
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: City,
+                    as: 'city',
+                    attributes: ['id', 'name'],
                 },
             ],
         });
