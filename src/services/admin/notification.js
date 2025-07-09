@@ -15,9 +15,7 @@ exports.createNotification = async (title, description, category, adminId) => {
     return {
       status: true,
       data: {
-        notification: {
-          id: notification.id,
-        },
+        id: notification.id,
       },
       message: "Notification created successfully.",
     };
@@ -55,10 +53,8 @@ exports.markAsRead = async (adminId) => {
     return {
       status: true,
       data: {
-        notifications: {
-          markedAsRead: newReadEntries.length,
-          totalAvailable: allNotifications.length,
-        },
+        markedAsRead: newReadEntries.length,
+        totalAvailable: allNotifications.length,
       },
       message:
         newReadEntries.length > 0
@@ -98,9 +94,7 @@ exports.getAllNotifications = async (adminId) => {
 
     return {
       status: true,
-      data: {
-        notifications: notificationList,
-      },
+      data: notificationList,
       message: `${notificationList.length} notification(s) retrieved successfully.`,
     };
   } catch (error) {
@@ -137,9 +131,7 @@ exports.getNotificationsByCategory = async (adminId, category) => {
 
     return {
       status: true,
-      data: {
-        notifications: filteredList,
-      },
+      data: filteredList,
       message: `${filteredList.length} notification(s) found under category '${category}'.`,
     };
   } catch (error) {
