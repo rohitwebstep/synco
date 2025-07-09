@@ -253,8 +253,6 @@ exports.updateMember = async (req, res) => {
                 email: "email",
                 status: "boolean",
                 country: "number",
-                state: "number",
-                city: "number",
             },
             fileExtensionValidations: {
                 profile: ["jpg", "jpeg", "png", "webp"],
