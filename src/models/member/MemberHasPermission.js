@@ -11,7 +11,7 @@ const MemberHasPermission = sequelize.define(
       primaryKey: true,
     },
     memberId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: {
         model: "members",
