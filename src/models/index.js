@@ -15,6 +15,11 @@ const PaymentGroup = require("./PaymentGroup");
 const PaymentGroupHasPlan = require("./PaymentGroupHasPlan");
 const Discount = require("./Discount");
 
+// 🌍 Location Models
+const Country = require("./location/Country");
+const State = require("./location/State");
+const City = require("./location/City");
+
 // ====================== Associations ====================== //
 
 // 🧾 Admin -> ActivityLog
@@ -65,7 +70,7 @@ MemberRole.hasMany(Member, {
   as: "members",
 });
 
-// 🔐 Member -> MemberHasPermission
+// 🔐 Member <-> Permissions
 Member.hasMany(MemberHasPermission, {
   foreignKey: "memberId",
   as: "permissions",
@@ -79,7 +84,6 @@ MemberHasPermission.belongsTo(Member, {
   onUpdate: "CASCADE",
 });
 
-// 🔐 Permission -> MemberHasPermission
 MemberPermission.hasMany(MemberHasPermission, {
   foreignKey: "permissionId",
   as: "memberAssignments",
@@ -107,6 +111,50 @@ PaymentPlan.belongsToMany(PaymentGroup, {
   as: "groups",
 });
 
+// ====================== 🌍 Location Associations ====================== //
+
+// Country -> State
+Country.hasMany(State, {
+  foreignKey: "countryId",
+  as: "states",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+State.belongsTo(Country, {
+  foreignKey: "countryId",
+  as: "country",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+// State -> City
+State.hasMany(City, {
+  foreignKey: "stateId",
+  as: "cities",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+City.belongsTo(State, {
+  foreignKey: "stateId",
+  as: "state",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+// Country -> City (direct)
+Country.hasMany(City, {
+  foreignKey: "countryId",
+  as: "cities",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+City.belongsTo(Country, {
+  foreignKey: "countryId",
+  as: "country",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
 // ====================== Module Exports ====================== //
 module.exports = {
   sequelize,
@@ -123,4 +171,7 @@ module.exports = {
   PaymentGroup,
   PaymentGroupHasPlan,
   Discount,
+  Country,
+  State,
+  City,
 };
