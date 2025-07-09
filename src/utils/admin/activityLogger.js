@@ -1,6 +1,8 @@
 const activityLog = require("../../services/admin/activityLog");
 const http = require('http');
 
+const DEBUG = process.env.DEBUG === true;
+
 exports.logActivity = async (req, panel, module, action, data, status) => {
   try {
 
@@ -60,14 +62,14 @@ exports.logActivity = async (req, panel, module, action, data, status) => {
 
     await activityLog.create(log);
 
-    console.log("📌 Full Request Log:", log);
+    if (DEBUG) console.log("📌 Full Request Log:", log);
 
     return {
       status: true,
       message: 'Activity log saved successfully.',
     };
   } catch (error) {
-    console.error("❌ Error logging request:", error.message);
+    if (DEBUG) console.error("❌ Error logging request:", error.message);
 
     return {
       status: false,

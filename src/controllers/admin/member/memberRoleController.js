@@ -1,6 +1,7 @@
 const { validateFormData } = require("../../../utils/validateFormData");
 const memberRoleModel = require("../../../services/admin/member/memberRole");
 const { logActivity } = require("../../../utils/admin/activityLogger");
+const { createNotification } = require('../../../utils/admin/notificationHelper');
 
 const DEBUG = process.env.DEBUG === true;
 const PANEL = 'admin';
@@ -44,8 +45,11 @@ exports.createMemberRole = async (req, res) => {
             });
         }
 
-        if (DEBUG) console.log("✅ Role created:", createResult.data);
+        const successMessage = `New member Role '${role}' created successfully by Admin ID: ${adminId}`;
+        if (DEBUG) console.log("✅", successMessage);
+
         await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: `Role "${role}" created.` }, true);
+        await createNotification(req, "New Member Role Added", successMessage, "Member Roles");
 
         return res.status(201).json({
             status: true,

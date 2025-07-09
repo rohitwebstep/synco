@@ -19,7 +19,23 @@ const Notification = sequelize.define(
       allowNull: true,
     },
     category: {
-      type: DataTypes.ENUM("Complaints", "Payments", "Cancelled Memberships"),
+      type: DataTypes.ENUM(
+        "Complaints",
+        "Payments",
+        "Cancelled Memberships",
+        "Members",
+        "Member Roles",
+        "System",
+        "Activity Logs",
+        "Security",
+        "Login",
+        "Settings",
+        "Updates",
+        "Announcements",
+        "Tasks",
+        "Messages",
+        "Support"
+      ),
       allowNull: false,
     },
     adminId: {
