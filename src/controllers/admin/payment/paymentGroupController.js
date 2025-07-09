@@ -1,4 +1,4 @@
-const paymentGroupModel = require("../../../services/admin/paymentGroup");
+const paymentGroupModel = require("../../../services/admin/payment/paymentGroup");
 const { validateFormData } = require("../../../utils/validateFormData");
 const { logActivity } = require("../../../utils/admin/activityLogger");
 

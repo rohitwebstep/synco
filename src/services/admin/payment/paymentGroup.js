@@ -1,4 +1,4 @@
-const { PaymentGroup } = require("../../models");
+const { PaymentGroup } = require("../../../models");
 const { Op } = require("sequelize");
 
 // ✅ Create a group

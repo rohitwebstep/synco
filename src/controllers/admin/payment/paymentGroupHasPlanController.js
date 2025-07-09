@@ -1,7 +1,7 @@
-const paymentGroupModel = require("../../../services/admin/paymentGroup");
-const groupPlanService = require("../../../services/admin/paymentGroupHasPlan");
+const paymentGroupModel = require("../../../services/admin/payment/paymentGroup");
+const groupPlanService = require("../../../services/admin/payment/paymentGroupHasPlan");
 const { logActivity } = require("../../../utils/admin/activityLogger");
-const PaymentPlan = require("../../../services/admin/paymentPlan");
+const PaymentPlan = require("../../../services/admin/payment/paymentPlan");
 const { validateFormData } = require("../../../utils/validateFormData");
 
 const DEBUG = process.env.DEBUG === "true";

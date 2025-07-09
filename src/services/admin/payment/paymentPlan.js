@@ -1,4 +1,4 @@
-const PaymentPlan = require("../../models/admin/payment/PaymentPlan");
+const PaymentPlan = require("../../../models/admin/payment/PaymentPlan");
 const { Op } = require("sequelize");
 
 // ✅ Create a new payment plan

@@ -1,5 +1,5 @@
 const { validateFormData } = require("../../../utils/validateFormData");
-const memberRoleModel = require("../../../services/admin/memberRole");
+const memberRoleModel = require("../../../services/admin/member/memberRole");
 const { logActivity } = require("../../../utils/admin/activityLogger");
 
 const DEBUG = process.env.DEBUG === true;

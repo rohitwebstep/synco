@@ -1,4 +1,4 @@
-const { MemberRole } = require("../../models");
+const { MemberRole } = require("../../../models");
 
 // ✅ Create a role
 exports.createMemberRole = async ({ role }) => {

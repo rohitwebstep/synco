@@ -33,6 +33,8 @@ app.use("/api/admin/payment-group", require("./routes/admin/payment/paymentGroup
 // ✅ Discounts
 app.use("/api/admin/discount", require("./routes/admin/discountRoutes"));  // Discount logic
 
+app.use("/api/location", require("./routes/location"));           // Manage members
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

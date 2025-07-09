@@ -9,7 +9,10 @@ exports.createDiscount = async (req, res) => {
   try {
     const formData = req.body;
 
-    if (DEBUG) console.log("📥 Received Discount FormData:", formData);
+    if (DEBUG) {
+      console.log("🟡 [Step 1] Received request to create discount.");
+      console.log("📥 Form Data Received:", JSON.stringify(formData, null, 2));
+    }
 
     const validation = validateFormData(formData, {
       requiredFields: ["type", "code", "valueType", "value", "applyOncePerOrder", "limitTotalUses", "limitPerCustomer", "startDatetime", "endDatetime", "appliesTo"],
@@ -22,6 +25,10 @@ exports.createDiscount = async (req, res) => {
       }
     });
 
+    if (DEBUG) {
+      console.log("🟡 [Step 2] Validation result:", validation);
+    }
+
     if (!validation.isValid) {
       if (DEBUG) console.log("❌ Validation failed:", validation);
       return res.status(400).json({
@@ -31,22 +38,56 @@ exports.createDiscount = async (req, res) => {
       });
     }
 
-    const result = await discountService.createDiscount(formData);
+    if (DEBUG) console.log("✅ [Step 3] Validation passed. Proceeding to service layer.");
 
-    if (!result.status) {
-      if (DEBUG) console.log("❌ Failed to create discount:", result.message);
+    const {
+      type,
+      code,
+      valueType,
+      value,
+      applyOncePerOrder,
+      limitTotalUses,
+      limitPerCustomer,
+      startDatetime,
+      endDatetime,
+      appliesTo
+    } = formData;
+
+    const discountByCodeResult = await discountService.getDiscountByCode(code);
+
+    if (discountByCodeResult.status) {
       return res.status(500).json({
         status: false,
-        message: result.message,
+        message: 'code is already used '
       });
     }
 
-    if (DEBUG) console.log("✅ Discount created successfully:", result.data);
+    const discountCreatePayload = {
+      type,
+      code,
+      valueType,
+      value,
+      applyOncePerOrder,
+      limitTotalUses,
+      limitPerCustomer,
+      startDatetime,
+      endDatetime,
+    };
 
-    return res.status(201).json({
-      status: true,
-      message: result.message,
-      data: result.data,
+    const discountCreateResult = await discountService.createDiscount(discountCreatePayload);
+
+    if (!discountCreateResult.status) {
+      return res.status(500).json({
+        status: false,
+        message: discountCreateResult.message
+      });
+    }
+
+    const discount = discountCreateResult.data;
+
+    return res.status(500).json({
+      status: false,
+      message: 'Discount Created Succesffully',
     });
   } catch (error) {
     console.error("❌ Create Discount Error:", error);
