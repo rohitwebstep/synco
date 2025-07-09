@@ -1,5 +1,5 @@
 const { validateFormData } = require("../../../utils/validateFormData");
-const memberRoleModel = require("../../../services/admin/member/memberRole");
+const memberRoleModel = require("../../../services/member/memberRole");
 const { logActivity } = require("../../../utils/admin/activityLogger");
 const { createNotification } = require('../../../utils/admin/notificationHelper');
 

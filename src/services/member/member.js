@@ -1,4 +1,4 @@
-const { Member, MemberRole, Country, State, City } = require("../../../models");
+const { Member, MemberRole, Country, State, City } = require("../../models");
 const { Op } = require("sequelize");
 
 // Create member

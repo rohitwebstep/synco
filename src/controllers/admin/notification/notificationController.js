@@ -1,5 +1,5 @@
-const notificationModel = require("../../services/admin/notification");
-const { logActivity } = require("../../utils/admin/activityLogger");
+const notificationModel = require("../../../services/admin/notification/notification");
+const { logActivity } = require("../../../utils/admin/activityLogger");
 
 const validCategories = [
   "Complaints",

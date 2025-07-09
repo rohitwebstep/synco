@@ -4,10 +4,10 @@ const { sequelize } = require("../../config/db");
 const ActivityLog = sequelize.define(
   "ActivityLog",
   {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    id: { type: DataTypes.INTEGER.UNSIGNED, primaryKey: true, autoIncrement: true },
 
     adminId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: {
         model: "admins",

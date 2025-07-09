@@ -15,11 +15,11 @@ const PaymentPlan = sequelize.define("PaymentPlan", {
     allowNull: false,
   },
   duration: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.INTEGER.UNSIGNED,
     allowNull: false,
   },
   students: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.INTEGER.UNSIGNED,
     allowNull: false,
   },
   joiningFee: {

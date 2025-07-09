@@ -5,7 +5,7 @@ const { createToken } = require("../../../utils/jwt");
 const { generatePasswordHint } = require("../../../utils/auth");
 const sendEmail = require("../../../utils/email/sendEmail");
 
-const memberModel = require("../../../services/admin/member/member");
+const memberModel = require("../../../services/member/member");
 const emailModel = require("../../../services/email");
 const { validateFormData } = require("../../../utils/validateFormData");
 const { saveFile, deleteFile } = require("../../../utils/fileHandler");

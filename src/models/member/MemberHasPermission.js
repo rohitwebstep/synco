@@ -1,12 +1,12 @@
 // models/MemberHasPermission.js
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../../../config/db");
+const { sequelize } = require("../../config/db");
 
 const MemberHasPermission = sequelize.define(
   "MemberHasPermission",
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
     },
@@ -19,7 +19,7 @@ const MemberHasPermission = sequelize.define(
       },
     },
     permissionId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: {
         model: "member_permissions",

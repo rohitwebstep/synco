@@ -8,14 +8,16 @@ const EmailConfig = require("./Email");
 const ActivityLog = require("./admin/ActivityLog");
 
 // ====================== 👥 Member & Roles ====================== //
-const Member = require("./admin/member/Member");
-const MemberRole = require("./admin/member/MemberRole");
-const MemberPermission = require("./admin/member/MemberPermission");
-const MemberHasPermission = require("./admin/member/MemberHasPermission");
+const Member = require("./member/Member");
+const MemberRole = require("./member/MemberRole");
+const MemberPermission = require("./member/MemberPermission");
+const MemberHasPermission = require("./member/MemberHasPermission");
 
 // ====================== 🔔 Notifications ====================== //
 const Notification = require("./admin/notification/Notification");
 const NotificationRead = require("./admin/notification/NotificationRead");
+const CustomNotification = require("./admin/notification/CustomNotification");
+const CustomNotificationRead = require("./admin/notification/CustomNotificationRead");
 
 // ====================== 💳 Payment System ====================== //
 const PaymentPlan = require("./admin/payment/PaymentPlan");
@@ -51,7 +53,7 @@ ActivityLog.belongsTo(Admin, {
   onUpdate: "CASCADE",
 });
 
-// Admin ↔ Notification (sent)
+// Admin ↔ Notification
 Admin.hasMany(Notification, {
   foreignKey: { name: "adminId", allowNull: false },
   as: "sentNotifications",
@@ -65,7 +67,7 @@ Notification.belongsTo(Admin, {
   onUpdate: "CASCADE",
 });
 
-// Admin ↔ NotificationRead (who read)
+// Admin ↔ NotificationRead
 Admin.hasMany(NotificationRead, {
   foreignKey: "adminId",
   as: "adminReads",
@@ -73,6 +75,20 @@ Admin.hasMany(NotificationRead, {
 NotificationRead.belongsTo(Admin, {
   foreignKey: "adminId",
   as: "admin",
+});
+
+// Admin ↔ CustomNotification
+Admin.hasMany(CustomNotification, {
+  foreignKey: { name: "adminId", allowNull: false },
+  as: "customNotifications",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+CustomNotification.belongsTo(Admin, {
+  foreignKey: { name: "adminId", allowNull: false },
+  as: "admin",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 
@@ -130,39 +146,37 @@ Country.hasMany(Member, {
   onUpdate: "CASCADE",
 });
 
-/*
-  // Member ↔ State
-  Member.belongsTo(State, {
-    foreignKey: "stateId",
-    as: "state",
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
-  });
-  State.hasMany(Member, {
-    foreignKey: "stateId",
-    as: "membersFromState",
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
-  });
+// Member ↔ CustomNotificationRead
+Member.hasMany(CustomNotificationRead, {
+  foreignKey: { name: "memberId", allowNull: true },
+  as: "customNotificationReads",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+CustomNotificationRead.belongsTo(Member, {
+  foreignKey: { name: "memberId", allowNull: true },
+  as: "member",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
 
-  // Member ↔ City
-  Member.belongsTo(City, {
-    foreignKey: "cityId",
-    as: "city",
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
-  });
-  City.hasMany(Member, {
-    foreignKey: "cityId",
-    as: "membersFromCity",
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
-  });
-*/
+
+/* 🔔 CustomNotification ↔ CustomNotificationRead */
+CustomNotification.hasMany(CustomNotificationRead, {
+  foreignKey: { name: "customNotificationId", allowNull: false },
+  as: "reads",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+CustomNotificationRead.belongsTo(CustomNotification, {
+  foreignKey: { name: "customNotificationId", allowNull: false },
+  as: "notification",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
 
 
 /* 💳 PaymentGroup ↔ PaymentPlan (Many-to-Many) */
-
 PaymentGroup.belongsToMany(PaymentPlan, {
   through: PaymentGroupHasPlan,
   foreignKey: "payment_group_id",
@@ -207,7 +221,7 @@ City.belongsTo(State, {
   onUpdate: "CASCADE",
 });
 
-// Country ↔ City (direct access)
+// Country ↔ City
 Country.hasMany(City, {
   foreignKey: "countryId",
   as: "cities",
@@ -275,6 +289,8 @@ module.exports = {
 
   Notification,
   NotificationRead,
+  CustomNotification,
+  CustomNotificationRead,
 
   PaymentPlan,
   PaymentGroup,

@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 const Discount = require("./Discount"); // Adjust path if needed
-const Member = require("../member/Member"); // Adjust path if needed
+const Member = require("../../member/Member"); // Adjust path if needed
 
 const DiscountUsage = sequelize.define(
     "DiscountUsage",

@@ -24,7 +24,8 @@ app.use("/api/admin/profile", require("./routes/admin/profileRoutes"));    // Ad
 app.use("/api/admin/member", require("./routes/admin/member"));           // Manage members
 
 // ✅ Notifications
-app.use("/api/admin/notification", require("./routes/admin/notificationRoutes"));  // Notifications (CRUD, read status)
+app.use("/api/admin/notification", require("./routes/admin/notification/notificationRoutes"));  // Notifications (CRUD, read status)
+app.use("/api/admin/custom-notification", require("./routes/admin/notification/customNotificationRoutes"));  // Notifications (CRUD, read status)
 
 // ✅ Payments
 app.use("/api/admin/payment-plan", require("./routes/admin/payment/paymentPlanRoutes"));         // Plan definitions
@@ -32,6 +33,14 @@ app.use("/api/admin/payment-group", require("./routes/admin/payment/paymentGroup
 
 // ✅ Discounts
 app.use("/api/admin/discount", require("./routes/admin/discountRoutes"));  // Discount logic
+
+
+// ✅ Auth & Profile
+app.use("/api/member/auth", require("./routes/member/authRoutes"));          // Login, Logout, etc.
+app.use("/api/member/profile", require("./routes/member/profileRoutes"));    // Member profile CRUD
+
+// ✅ Notifications
+app.use("/api/member/notification", require("./routes/member/notification/notificationRoutes"));  // Notifications (CRUD, read status)
 
 app.use("/api/location", require("./routes/location"));           // Manage members
 

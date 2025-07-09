@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../../../config/db");
+const { sequelize } = require("../../config/db");
 
 const Member = sequelize.define(
   "Member",
@@ -47,7 +47,7 @@ const Member = sequelize.define(
       allowNull: true,
     },
     roleId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       references: {
         model: "member_roles", // Must match the tableName of Role model
         key: "id",

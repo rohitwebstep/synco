@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../../middleware/admin/authenticate");
+const authMiddleware = require("../../../middleware/admin/authenticate");
 
 const {
   createNotification,
   getAllNotifications,
   getNotificationsByCategory,
   markNotificationAsRead,
-} = require("../../controllers/admin/notificationController");
+} = require("../../../controllers/admin/notification/notificationController");
 
 // Create a new notification
 router.post("/", authMiddleware, createNotification);

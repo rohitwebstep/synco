@@ -1,25 +1,31 @@
+// models/CustomNotificationRead.js
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 
-const NotificationRead = sequelize.define(
-  "NotificationRead",
+const CustomNotificationRead = sequelize.define(
+  "CustomNotificationRead",
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
     },
-    notificationId: {
+    customNotificationId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
-    adminId: {
+    memberId: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true, // ✅ allow null
+      allowNull: true,
       references: {
-        model: "admins",
+        model: "members",
         key: "id",
       },
+    },
+    status: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -28,9 +34,9 @@ const NotificationRead = sequelize.define(
     },
   },
   {
-    tableName: "notification_reads",
+    tableName: "custom_notification_reads",
     timestamps: false,
   }
 );
 
-module.exports = NotificationRead;
+module.exports = CustomNotificationRead;

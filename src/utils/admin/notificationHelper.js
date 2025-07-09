@@ -1,4 +1,4 @@
-const notificationService = require("../../services/admin/notification");
+const notificationService = require("../../services/admin/notification/notification");
 
 const DEBUG = process.env.DEBUG === "true";
 
@@ -49,7 +49,7 @@ exports.createNotification = async (req, title, description, category, scope = '
         "Messages",
         "Support"
     ];
-    
+
     if (!validCategories.includes(category)) {
         const message = `Invalid category. Allowed categories: ${validCategories.join(", ")}`;
         if (DEBUG) console.warn(`🚫 ${message}`);

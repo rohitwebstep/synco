@@ -1,4 +1,4 @@
-const { Notification, NotificationRead, User } = require("../../models");
+const { Notification, NotificationRead, User } = require("../../../models");
 const { Op } = require("sequelize");
 
 // ✅ Create a notification

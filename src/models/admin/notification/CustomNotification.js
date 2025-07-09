@@ -1,9 +1,9 @@
-// models/Notification.js
+// models/CustomNotification.js
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 
-const Notification = sequelize.define(
-  "Notification",
+const CustomNotification = sequelize.define(
+  "CustomNotification",
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -49,9 +49,9 @@ const Notification = sequelize.define(
     },
   },
   {
-    tableName: "notifications",
+    tableName: "custom_notifications",
     timestamps: false,
   }
 );
 
-module.exports = Notification;
+module.exports = CustomNotification;
