@@ -30,14 +30,14 @@ const getDiscountByCode = async (code) => {
 };
 
 // ✅ Create Discount
-const createDiscount = async (data, res) => {
+const createDiscount = async (data) => {
   try {
     const discountByCodeResult = await getDiscountByCode(data.code);
     if (discountByCodeResult.status) {
-      return res.status(400).json({
+      return {
         status: false,
         message: "Code is already used."
-      });
+      };
     }
 
     const discount = await Discount.create({
@@ -56,22 +56,22 @@ const createDiscount = async (data, res) => {
       for (const item of data.appliesTo) {
         await DiscountAppliesTo.create({
           discountId: discount.id,
-          appliesTo: item
+          target: item
         });
       }
     }
 
-    return res.status(201).json({
+    return {
       status: true,
       message: "Discount created successfully.",
       data: discount
-    });
+    };
   } catch (error) {
     console.error("❌ Sequelize Error in createDiscount:", error);
-    return res.status(500).json({
+    return {
       status: false,
       message: error?.parent?.sqlMessage || error?.message || "Error occurred while creating the discount."
-    });
+    };
   }
 };
 
@@ -80,7 +80,7 @@ const getDiscountAppliedToByDiscountId = async (discountId) => {
   try {
     const records = await DiscountAppliesTo.findAll({
       where: { discountId },
-      attributes: ["appliesTo"]
+      attributes: ["target"]
     });
 
     return {
@@ -98,7 +98,7 @@ const createDiscountAppliesTo = async ({ discountId, target }) => {
   try {
     const created = await DiscountAppliesTo.create({
       discountId,
-      appliesTo: target
+      target
     });
 
     return {
@@ -115,9 +115,49 @@ const createDiscountAppliesTo = async ({ discountId, target }) => {
   }
 };
 
+// ✅ Get All Discounts
+const getAllDiscounts = async () => {
+  try {
+    const discounts = await Discount.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: DiscountAppliesTo,
+          as: 'appliesTo',
+          attributes: ['id', 'target'], // include more fields if needed
+        },
+      ],
+    });
+
+    if (!discounts || discounts.length === 0) {
+      return {
+        status: true,
+        message: "No discounts found.",
+        data: [],
+      };
+    }
+
+    return {
+      status: true,
+      message: "Discounts fetched successfully with applied targets.",
+      data: discounts,
+    };
+  } catch (error) {
+    console.error("❌ Sequelize Error in getAllDiscounts:", error);
+    return {
+      status: false,
+      message:
+        error?.parent?.sqlMessage ||
+        error?.message ||
+        "Error occurred while fetching discounts.",
+    };
+  }
+};
+
 module.exports = {
   getDiscountByCode,
   createDiscount,
   getDiscountAppliedToByDiscountId,
-  createDiscountAppliesTo
+  createDiscountAppliesTo,
+  getAllDiscounts
 };

@@ -1,4 +1,4 @@
-const { CustomNotification, CustomNotificationRead, User } = require("../../../models");
+const { CustomNotification, CustomNotificationRead, Admin, Member } = require("../../../models");
 const { Op } = require("sequelize");
 
 // ✅ Create a notification
@@ -49,6 +49,46 @@ exports.createCustomNotificationReads = async ({ customNotificationId, memberId,
     return {
       status: false,
       message: `Failed to create notification read record. ${error.message}`,
+    };
+  }
+};
+
+// ✅ Get all custom notifications
+exports.getAllCustomNotifications = async () => {
+  try {
+    const notifications = await CustomNotification.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: CustomNotificationRead,
+          as: 'reads',
+          attributes: ['id', 'memberId', 'status', 'createdAt'],
+          include: [
+            {
+              model: Member,
+              as: 'member',
+              attributes: ['id', 'firstName', 'lastName', 'email', 'profile']
+            }
+          ]
+        },
+        {
+          model: Admin,
+          as: 'admin',
+          attributes: ['id', 'name', 'email'],
+        }
+      ]
+    });
+
+    return {
+      status: true,
+      message: "Custom notifications fetched successfully.",
+      data: notifications,
+    };
+  } catch (error) {
+    console.error("❌ Sequelize Error in getAllCustomNotifications:", error);
+    return {
+      status: false,
+      message: `Error fetching custom notifications. ${error.message}`,
     };
   }
 };

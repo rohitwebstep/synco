@@ -35,6 +35,7 @@ exports.createNotification = async (req, title, description, category, scope = '
     const validCategories = [
         "Complaints",
         "Payments",
+        "Discounts",
         "Cancelled Memberships",
         "Members",
         "Member Roles",

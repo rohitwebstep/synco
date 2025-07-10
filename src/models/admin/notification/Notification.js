@@ -22,6 +22,7 @@ const Notification = sequelize.define(
       type: DataTypes.ENUM(
         "Complaints",
         "Payments",
+        "Discounts",
         "Cancelled Memberships",
         "Members",
         "Member Roles",

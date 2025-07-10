@@ -4,6 +4,7 @@ const { logActivity } = require("../../../utils/admin/activityLogger");
 const validCategories = [
   "Complaints",
   "Payments",
+  "Discounts",
   "Cancelled Memberships",
   "Members",
   "Member Roles",
@@ -18,6 +19,7 @@ const validCategories = [
   "Messages",
   "Support"
 ];
+
 const DEBUG = process.env.DEBUG === "true";
 
 const PANEL = 'admin';
