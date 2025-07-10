@@ -32,8 +32,11 @@ exports.createPaymentGroup = async (req, res) => {
     });
   }
 
+  // ✅ Safely handle "plans"
   if (typeof plans === "string") {
     plans = plans.split(",").map(id => id.trim()).filter(Boolean);
+  } else if (!Array.isArray(plans)) {
+    plans = [];
   }
 
   try {
@@ -202,9 +205,11 @@ exports.updatePaymentGroup = async (req, res) => {
     });
   }
 
-  // ✅ Parse plan IDs
+  // ✅ Safely handle "plans"
   if (typeof plans === "string") {
     plans = plans.split(",").map(id => id.trim()).filter(Boolean);
+  } else if (!Array.isArray(plans)) {
+    plans = [];
   }
 
   try {
@@ -217,43 +222,39 @@ exports.updatePaymentGroup = async (req, res) => {
       return res.status(404).json({ status: false, message: result.message });
     }
 
-    // ✅ Step 2: If plans are sent, handle plan re-assignment
-    if (Array.isArray(plans)) {
-      const existingPlanResult = await groupPlanService.getPaymentGroupAssignedPlans(id);
-      const existingPlans = existingPlanResult.status ? existingPlanResult.data : [];
-      const newPlanIds = plans.map(String);
+    // ✅ Step 2: Handle plan re-assignment
+    const existingPlanResult = await groupPlanService.getPaymentGroupAssignedPlans(id);
+    const existingPlans = existingPlanResult.status ? existingPlanResult.data : [];
+    const newPlanIds = plans.map(String);
 
-      // Remove unselected plans
-      const toRemove = existingPlans.filter(id => !newPlanIds.includes(id));
-      for (const planId of toRemove) {
-        const removeResult = await groupPlanService.removePlanFromPaymentGroup(id, planId);
-        if (DEBUG) {
-          console.log(
-            removeResult.status
-              ? `🗑️ Removed plan ID ${planId}`
-              : `⚠️ Failed to remove plan ID ${planId}: ${removeResult.message}`
-          );
-        }
+    // Remove unselected plans
+    const toRemove = existingPlans.filter(existingId => !newPlanIds.includes(existingId));
+    for (const planId of toRemove) {
+      const removeResult = await groupPlanService.removePlanFromPaymentGroup(id, planId);
+      if (DEBUG) {
+        console.log(
+          removeResult.status
+            ? `🗑️ Removed plan ID ${planId}`
+            : `⚠️ Failed to remove plan ID ${planId}: ${removeResult.message}`
+        );
+      }
+    }
+
+    // Add newly selected plans
+    for (const planId of newPlanIds) {
+      const planCheck = await PaymentPlan.findByPk(planId);
+      if (!planCheck) {
+        console.warn(`⛔ Skipped plan ID ${planId}: not found`);
+        continue;
       }
 
-      // Add new plans
-      for (const planId of newPlanIds) {
-        const planCheck = await PaymentPlan.findByPk(planId);
-
-        if (!planCheck) {
-          console.warn(`⛔ Skipped plan ID ${planId}: not found`);
-          continue;
-        }
-
-        const assignResult = await groupPlanService.assignPlanToPaymentGroup(id, planId);
-
-        if (!assignResult.status) {
-          console.warn(`⚠️ Failed to assign plan ID ${planId}: ${assignResult.message}`);
-          continue;
-        }
-
-        if (DEBUG) console.log(`✅ Assigned plan ID ${planId} to group ${id}`);
+      const assignResult = await groupPlanService.assignPlanToPaymentGroup(id, planId);
+      if (!assignResult.status) {
+        console.warn(`⚠️ Failed to assign plan ID ${planId}: ${assignResult.message}`);
+        continue;
       }
+
+      if (DEBUG) console.log(`✅ Assigned plan ID ${planId} to group ${id}`);
     }
 
     if (DEBUG) console.log("✅ Payment group updated successfully:", result.data);
@@ -267,10 +268,14 @@ exports.updatePaymentGroup = async (req, res) => {
       message: "Payment group updated successfully.",
       data: result.data,
     });
+
   } catch (error) {
     console.error("❌ Error updating payment group:", error);
     await logActivity(req, PANEL, MODULE, 'update', { oneLineMessage: error.message }, false);
-    return res.status(500).json({ status: false, message: "Server error occurred." });
+    return res.status(500).json({
+      status: false,
+      message: "Server error occurred.",
+    });
   }
 };
 
