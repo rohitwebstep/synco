@@ -4,14 +4,14 @@ const { logActivity } = require("../../../utils/admin/activityLogger");
 const PaymentPlan = require("../../../services/admin/payment/paymentPlan");
 const { validateFormData } = require("../../../utils/validateFormData");
 
-const DEBUG = process.env.DEBUG === "true";
+const DEBUG = process.env.DEBUG === true;
 const PANEL = 'admin';
 const MODULE = 'payment-group';
 
 exports.assignPlansToPaymentGroup = async (req, res) => {
   const { id: groupId } = req.params;
   const formData = req.body;
-  let { planIds } = formData;
+  let { plans } = formData;
 
   if (DEBUG) {
     console.log("📥 STEP 1: Received request to assign plans");
@@ -38,7 +38,7 @@ exports.assignPlansToPaymentGroup = async (req, res) => {
 
   // STEP 3: Validate input
   const validation = validateFormData(formData, {
-    requiredFields: ["planIds"],
+    requiredFields: ["plans"],
   });
 
   if (!validation.isValid) {
@@ -54,21 +54,21 @@ exports.assignPlansToPaymentGroup = async (req, res) => {
     });
   }
 
-  // STEP 4: Normalize planIds
-  if (typeof planIds === "string") {
-    planIds = planIds.split(",").map(id => id.trim()).filter(Boolean);
+  // STEP 4: Normalize plans
+  if (typeof plans === "string") {
+    plans = plans.split(",").map(id => id.trim()).filter(Boolean);
   }
 
-  if (!Array.isArray(planIds) || planIds.length === 0) {
-    const message = "planIds must be a non-empty array.";
+  if (!Array.isArray(plans) || plans.length === 0) {
+    const message = "plans must be a non-empty array.";
     if (DEBUG) console.log("❌ STEP 4:", message);
     await logActivity(req, PANEL, MODULE, 'assignPlans', { oneLineMessage: message }, false);
     return res.status(400).json({ status: false, message });
   }
 
   if (DEBUG) {
-    console.log("✅ STEP 4: Normalized planIds");
-    console.log("📦 Plan IDs:", planIds);
+    console.log("✅ STEP 4: Normalized plans");
+    console.log("📦 Plan IDs:", plans);
   }
 
   try {
@@ -87,14 +87,14 @@ exports.assignPlansToPaymentGroup = async (req, res) => {
       });
     }
 
-    const existingPlanIds = existingPlanResult.data;
-    const newPlanIds = planIds.map(String);
-    const toRemove = existingPlanIds.filter(id => !newPlanIds.includes(id));
+    const existingplans = existingPlanResult.data;
+    const newplans = plans.map(String);
+    const toRemove = existingplans.filter(id => !newplans.includes(id));
 
     if (DEBUG) {
       console.log("📂 STEP 5: Plan comparison complete");
-      console.log("🟡 Existing:", existingPlanIds);
-      console.log("🟢 Incoming:", newPlanIds);
+      console.log("🟡 Existing:", existingplans);
+      console.log("🟢 Incoming:", newplans);
       console.log("🔴 To Remove:", toRemove);
     }
 
@@ -114,7 +114,7 @@ exports.assignPlansToPaymentGroup = async (req, res) => {
     const assigned = [];
     const skipped = [];
 
-    for (const planId of planIds) {
+    for (const planId of plans) {
       const planCheck = await PaymentPlan.getPlanById(planId);
 
       if (!planCheck.status) {

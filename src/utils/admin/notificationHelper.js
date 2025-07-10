@@ -1,6 +1,6 @@
 const notificationService = require("../../services/admin/notification/notification");
 
-const DEBUG = process.env.DEBUG === "true";
+const DEBUG = process.env.DEBUG === true;
 
 /**
  * Logs a notification for admin panel actions.

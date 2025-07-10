@@ -2,7 +2,7 @@ const countryModel = require("../../services/location/country");
 const stateModel = require("../../services/location/state");
 const { logActivity } = require("../../utils/admin/activityLogger");
 
-const DEBUG = process.env.DEBUG === "true";
+const DEBUG = process.env.DEBUG === true;
 
 const PANEL = 'admin';
 const MODULE = 'location-country';
