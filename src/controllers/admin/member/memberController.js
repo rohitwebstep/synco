@@ -7,6 +7,7 @@ const sendEmail = require("../../../utils/email/sendEmail");
 
 const memberModel = require("../../../services/member/member");
 const emailModel = require("../../../services/email");
+const countryModel = require("../../../services/location/country");
 const { validateFormData } = require("../../../utils/validateFormData");
 const { saveFile, deleteFile } = require("../../../utils/fileHandler");
 
@@ -14,7 +15,7 @@ const { logActivity } = require('../../../utils/admin/activityLogger');
 const { createNotification } = require('../../../utils/admin/notificationHelper');
 
 // Set DEBUG flag
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 const PANEL = 'admin';
 const MODULE = 'member';
 
@@ -238,6 +239,8 @@ exports.updateMember = async (req, res) => {
         if (DEBUG) console.log("🔍 Checking if email already exists:", formData.email);
 
         const { status: exists, data: existingMember } = await memberModel.findMemberByEmail(formData.email);
+        if (DEBUG) console.log("{ status: exists, data: existingMember }:", { status: exists, data: existingMember });
+
         if (exists && existingMember && existingMember.id.toString() !== id.toString()) {
             if (DEBUG) console.log("❌ Email already registered:", formData.email);
             return res.status(409).json({
@@ -282,6 +285,14 @@ exports.updateMember = async (req, res) => {
         if (formData.status) {
             const statusRaw = formData.status.toString().toLowerCase();
             updateData.status = ["true", "1", "yes", "active"].includes(statusRaw);
+        }
+
+        const countryCheck = await countryModel.getCountryById(updateData.countryId);
+        if (!countryCheck.status) {
+            return res.status(400).json({
+                status: false,
+                message: `${countryCheck.message}`,
+            });
         }
 
         // Handle new profile image (if any)

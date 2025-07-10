@@ -4,7 +4,7 @@ const { logActivity } = require("../../../utils/admin/activityLogger");
 const PaymentPlan = require("../../../services/admin/payment/paymentPlan");
 const { validateFormData } = require("../../../utils/validateFormData");
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 const PANEL = 'admin';
 const MODULE = 'payment-group';
 

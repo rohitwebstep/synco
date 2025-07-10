@@ -1,7 +1,7 @@
 const notificationModel = require("../../../services/member/notification/notification");
 // const { logActivity } = require("../../../utils/member/activityLogger");
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 
 const PANEL = 'member';
 const MODULE = 'notification';

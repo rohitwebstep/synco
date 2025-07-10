@@ -3,7 +3,7 @@ const memberRoleModel = require("../../../services/member/memberRole");
 const { logActivity } = require("../../../utils/admin/activityLogger");
 const { createNotification } = require('../../../utils/admin/notificationHelper');
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 const PANEL = 'admin';
 const MODULE = 'member-role';
 

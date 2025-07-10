@@ -6,7 +6,7 @@ const { validateFormData } = require("../../utils/validateFormData");
 const { logActivity } = require("../../utils/admin/activityLogger");
 const { createNotification } = require("../../utils/admin/notificationHelper");
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 const PANEL = 'admin';
 const MODULE = 'discount';
 

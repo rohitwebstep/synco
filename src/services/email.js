@@ -1,6 +1,6 @@
 const { EmailConfig } = require("../models");
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 
 /**
  * Get an active email configuration by module and action.

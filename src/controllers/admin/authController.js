@@ -5,7 +5,7 @@ const sendEmail = require("../../utils/email/sendEmail");
 const adminModel = require("../../services/admin/admin");
 const emailModel = require("../../services/email");
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 
 // ✅ Register a new admin
 exports.register = async (req, res) => {

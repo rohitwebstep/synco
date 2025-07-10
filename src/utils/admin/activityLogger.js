@@ -1,7 +1,7 @@
 const activityLog = require("../../services/admin/activityLog");
 const http = require('http');
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 
 exports.logActivity = async (req, panel, module, action, data, status) => {
   try {

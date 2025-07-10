@@ -20,7 +20,7 @@ const validCategories = [
   "Support"
 ];
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 
 const PANEL = 'admin';
 const MODULE = 'notification';

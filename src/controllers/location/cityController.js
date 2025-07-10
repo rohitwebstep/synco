@@ -1,7 +1,7 @@
 const cityModel = require("../../services/location/city");
 const { logActivity } = require("../../utils/admin/activityLogger");
 
-const DEBUG = process.env.DEBUG === true;
+const DEBUG = process.env.DEBUG === 'true';
 
 const PANEL = 'admin';
 const MODULE = 'location-city';

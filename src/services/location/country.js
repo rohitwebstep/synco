@@ -49,3 +49,30 @@ exports.getStatesByCountryId = async (countryId) => {
     };
   }
 };
+
+// Get a single country by ID
+exports.getCountryById = async (countryId) => {
+  try {
+    const country = await Country.findByPk(countryId);
+
+    if (!country) {
+      return {
+        status: false,
+        message: `No country found with ID ${countryId}.`
+      };
+    }
+
+    return {
+      status: true,
+      message: `Country ID ${countryId} fetched successfully.`,
+      data: country
+    };
+  } catch (error) {
+    console.error("❌ Sequelize Error in getCountryById:", error);
+
+    return {
+      status: false,
+      message: error?.parent?.sqlMessage || error?.message || "Failed to fetch country by ID."
+    };
+  }
+};
