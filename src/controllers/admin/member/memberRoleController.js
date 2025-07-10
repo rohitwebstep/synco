@@ -45,7 +45,7 @@ exports.createMemberRole = async (req, res) => {
             });
         }
 
-        const successMessage = `New member Role '${role}' created successfully by Admin ID: ${req.admin.id}`;
+        const successMessage = `New member Role '${role}' created successfully by Admin: ${req.admin.name}`;
         if (DEBUG) console.log("✅", successMessage);
 
         await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: `Role "${role}" created.` }, true);
@@ -194,7 +194,7 @@ exports.deleteMemberRole = async (req, res) => {
             message: "Role deleted successfully.",
         });
     } catch (error) {
-        console.error("❌ Delete Role Error:", error);
+        if (DEBUG) error("❌ Delete Role Error:", error);
         await logActivity(req, PANEL, MODULE, 'delete', { oneLineMessage: error.message }, false);
         return res.status(500).json({ status: false, message: "Failed to delete role." });
     }

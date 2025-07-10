@@ -125,7 +125,7 @@ exports.createMember = async (req, res) => {
             if (DEBUG) console.log("ℹ️ No file uploaded, skipping file save.");
         }
 
-        const successMessage = `New member '${name}' created successfully by Admin ID: ${req.admin.id}`;
+        const successMessage = `New member '${name}' created successfully by Admin: ${req.admin.name}`;
         if (DEBUG) console.log("✅", successMessage);
 
         await logActivity(req, PANEL, MODULE, 'create', createResult, true);
@@ -381,7 +381,7 @@ exports.changeMemberStatus = async (req, res) => {
             message: `Member status updated to '${normalizedStatus}' successfully.`,
         });
     } catch (error) {
-        console.error("❌ Change Member Status Error:", error);
+        if (DEBUG) error("❌ Change Member Status Error:", error);
         return res.status(500).json({
             status: false,
             message: "Failed to update member status. Please try again later.",
@@ -392,7 +392,6 @@ exports.changeMemberStatus = async (req, res) => {
 // ✅ Delete a member
 exports.deleteMember = async (req, res) => {
     const { id } = req.params;
-    const adminId = req.admin?.id;
 
     if (DEBUG) console.log("🗑️ Request received to delete member ID:", id);
 
@@ -405,7 +404,6 @@ exports.deleteMember = async (req, res) => {
             if (DEBUG) console.log("❌", message);
 
             await logActivity(req, PANEL, MODULE, 'delete', { oneLineMessage: message }, false);
-            await createNotification(req, "Delete Member Failed", message, "createNotification");
 
             return res.status(404).json({ status: false, message });
         }
@@ -420,12 +418,11 @@ exports.deleteMember = async (req, res) => {
             if (DEBUG) console.log("❌", message);
 
             await logActivity(req, PANEL, MODULE, 'delete', { oneLineMessage: message }, false);
-            await createNotification(req, "Delete Member Failed", message, "Members");
 
             return res.status(500).json({ status: false, message });
         }
 
-        const successMessage = `Member '${member.firstName} ${member.lastName || ""}' (ID: ${id}) deleted by Admin ID: ${adminId}`;
+        const successMessage = `Member '${member.firstName} ${member.lastName || ""}' (ID: ${id}) deleted by Admin: ${req.admin?.name}`;
         if (DEBUG) console.log("✅", successMessage);
 
         await logActivity(req, PANEL, MODULE, 'delete', { oneLineMessage: successMessage }, true);
@@ -438,13 +435,10 @@ exports.deleteMember = async (req, res) => {
 
     } catch (error) {
         const errorMsg = error?.message || "Failed to delete member due to server error.";
-        console.error("❌ Delete Member Error:", error);
-
-        await createNotification(req, "Delete Member Error", errorMsg, "Members");
-
+        console.error("❌ Delete Member Error:", errorMsg);
         return res.status(500).json({
             status: false,
-            message: "An unexpected error occurred while deleting the member. Please try again later.",
+            message: errorMsg,
         });
     }
 };

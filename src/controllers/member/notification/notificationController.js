@@ -14,7 +14,7 @@ exports.getAllNotifications = async (req, res) => {
     const result = await notificationModel.getAllNotifications(req.member.id);
 
     if (!result.status) {
-      if (DEBUG) console.error(`❌ Fetch failed:`, result.message);
+      console.error(`❌ Fetch failed:`, result.message);
       /*
       await logActivity(req, PANEL, MODULE, 'list', result, false);
       */
@@ -55,7 +55,7 @@ exports.markCustomNotificationAsRead = async (req, res) => {
     const result = await notificationModel.markCustomNotificationAsRead(memberId);
 
     if (!result.status) {
-      if (DEBUG) console.error(`❌ Update failed:`, result.message);
+      console.error(`❌ Update failed:`, result.message);
 
       // Optional activity logging
       // await logActivity(req, PANEL, MODULE, 'update', result, false);

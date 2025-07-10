@@ -33,14 +33,14 @@ exports.createNotification = async (req, res) => {
 
   if (!category) {
     const message = "Category is required.";
-    if (DEBUG) console.warn(`⚠️ ${message}`);
+    console.warn(`⚠️ ${message}`);
     await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
     return res.status(400).json({ status: false, message });
   }
 
   if (!validCategories.includes(category)) {
     const message = `Invalid category. Valid categories are: ${validCategories.join(", ")}`;
-    if (DEBUG) console.warn(`🚫 ${message}`);
+    console.warn(`🚫 ${message}`);
     await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
     return res.status(422).json({ status: false, message });
   }
@@ -54,7 +54,7 @@ exports.createNotification = async (req, res) => {
     );
 
     if (!result.status) {
-      if (DEBUG) console.error(`❌ Creation failed:`, result.message);
+      console.error(`❌ Creation failed:`, result.message);
       await logActivity(req, PANEL, MODULE, 'create', result, false);
       return res.status(500).json({ status: false, message: result.message });
     }
@@ -85,7 +85,7 @@ exports.markNotificationAsRead = async (req, res) => {
     const result = await notificationModel.markAsRead(req.admin.id);
 
     if (!result.status) {
-      if (DEBUG) console.error(`❌ Failed to mark as read:`, result.message);
+      console.error(`❌ Failed to mark as read:`, result.message);
       await logActivity(req, PANEL, MODULE, 'markRead', result, false);
       return res.status(500).json({ status: false, message: result.message });
     }
@@ -116,7 +116,7 @@ exports.getAllNotifications = async (req, res) => {
     const result = await notificationModel.getAllNotifications(req.admin.id);
 
     if (!result.status) {
-      if (DEBUG) console.error(`❌ Fetch failed:`, result.message);
+      console.error(`❌ Fetch failed:`, result.message);
       await logActivity(req, PANEL, MODULE, 'list', result, false);
       return res.status(500).json({ status: false, message: result.message });
     }
@@ -149,7 +149,7 @@ exports.getNotificationsByCategory = async (req, res) => {
 
   if (!validCategories.includes(category)) {
     const message = `Invalid category. Valid categories are: ${validCategories.join(", ")}`;
-    if (DEBUG) console.warn(`🚫 ${message}`);
+    console.warn(`🚫 ${message}`);
     await logActivity(req, PANEL, MODULE, 'listByCategory', { oneLineMessage: message }, false);
     return res.status(422).json({ status: false, message });
   }
@@ -158,7 +158,7 @@ exports.getNotificationsByCategory = async (req, res) => {
     const result = await notificationModel.getNotificationsByCategory(req.admin.id, category);
 
     if (!result.status) {
-      if (DEBUG) console.error(`❌ Fetch by category failed:`, result.message);
+      console.error(`❌ Fetch by category failed:`, result.message);
       await logActivity(req, PANEL, MODULE, 'listByCategory', result, false);
       return res.status(500).json({ status: false, message: result.message });
     }

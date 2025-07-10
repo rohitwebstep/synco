@@ -69,7 +69,7 @@ exports.logActivity = async (req, panel, module, action, data, status) => {
       message: 'Activity log saved successfully.',
     };
   } catch (error) {
-    if (DEBUG) console.error("❌ Error logging request:", error.message);
+    console.error("❌ Error logging request:", error.message);
 
     return {
       status: false,

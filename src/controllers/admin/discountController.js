@@ -96,7 +96,7 @@ exports.createDiscount = async (req, res) => {
 
     for (const item of appliesTo) {
       if (existingTargets.includes(item)) {
-        if (DEBUG) console.warn(`⚠️ Skipping duplicate apply target: ${item}`);
+        console.warn(`⚠️ Skipping duplicate apply target: ${item}`);
         continue;
       }
 
@@ -115,7 +115,7 @@ exports.createDiscount = async (req, res) => {
       }
     }
 
-    const successMessage = `Discount '${code}' created successfully by Admin ID: ${req.admin?.id}`;
+    const successMessage = `Discount '${code}' created successfully by Admin: ${req.admin?.name}`;
     if (DEBUG) console.log("✅", successMessage);
 
     await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: successMessage }, true);
@@ -129,9 +129,6 @@ exports.createDiscount = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Create Discount Error:", error);
-
-    await createNotification(req, "Create Discount Error", error?.message || "An unexpected error occurred.", "Discounts");
-
     return res.status(500).json({
       status: false,
       message: "Server error occurred while creating the discount. Please try again later.",
@@ -151,7 +148,6 @@ exports.getAllDiscounts = async (req, res) => {
       if (DEBUG) console.log("❌ Failed to fetch discounts:", errorMsg);
 
       await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: errorMsg }, false);
-      await createNotification(req, "Discount Fetch Failed", errorMsg, "Discounts");
 
       return res.status(500).json({
         status: false,
@@ -184,9 +180,6 @@ exports.getAllDiscounts = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Get All Discounts Error:", error);
-
-    await createNotification(req, "Discount Listing Error", error?.message || "Unexpected error occurred.", "Discounts");
-
     return res.status(500).json({
       status: false,
       message: "Server error occurred while fetching discounts. Please try again later.",

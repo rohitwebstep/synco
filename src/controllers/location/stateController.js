@@ -22,7 +22,7 @@ exports.getAllStates = async (req, res) => {
     // ❌ Failed response from service
     if (!result.status) {
       const failMessage = result.message || "Failed to fetch states.";
-      if (DEBUG) console.error(`❌ [FAIL] Fetch states:`, failMessage);
+      console.error(`❌ [FAIL] Fetch states:`, failMessage);
 
       await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: failMessage }, false);
 
@@ -72,7 +72,7 @@ exports.getAllCitiesOfState = async (req, res) => {
   // ✅ Step 1: Validate stateId
   if (!stateId || isNaN(stateId)) {
     const invalidMsg = "Invalid or missing state ID.";
-    if (DEBUG) console.error(`❌ [INVALID]`, invalidMsg);
+    console.error(`❌ [INVALID]`, invalidMsg);
 
     await logActivity(req, PANEL, MODULE, 'cities-list', { oneLineMessage: invalidMsg }, false);
 
@@ -88,7 +88,7 @@ exports.getAllCitiesOfState = async (req, res) => {
 
     if (!result.status) {
       const failMessage = result.message || "Failed to fetch cities.";
-      if (DEBUG) console.error(`❌ [FAIL] Fetch cities:`, failMessage);
+      console.error(`❌ [FAIL] Fetch cities:`, failMessage);
 
       await logActivity(req, PANEL, MODULE, 'cities-list', { oneLineMessage: failMessage }, false);
 

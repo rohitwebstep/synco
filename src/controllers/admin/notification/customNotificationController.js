@@ -32,14 +32,14 @@ exports.createCustomNotification = async (req, res) => {
 
   if (!category) {
     const message = "Category is required.";
-    if (DEBUG) console.warn(`⚠️ ${message}`);
+    console.warn(`⚠️ ${message}`);
     await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
     return res.status(400).json({ status: false, message });
   }
 
   if (!validCategories.includes(category)) {
     const message = `Invalid category. Valid categories are: ${validCategories.join(", ")}`;
-    if (DEBUG) console.warn(`🚫 ${message}`);
+    console.warn(`🚫 ${message}`);
     await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
     return res.status(422).json({ status: false, message });
   }
@@ -53,7 +53,7 @@ exports.createCustomNotification = async (req, res) => {
     );
 
     if (!result.status) {
-      if (DEBUG) console.error("❌ Creation failed:", result.message);
+      console.error("❌ Creation failed:", result.message);
       await logActivity(req, PANEL, MODULE, 'create', result, false);
       return res.status(500).json({ status: false, message: result.message });
     }
@@ -71,7 +71,7 @@ exports.createCustomNotification = async (req, res) => {
         const readResult = await customNotificationModel.createCustomNotificationReads(payload);
 
         if (!readResult.status) {
-          if (DEBUG) console.error(`❌ Failed to create read record for member ${memberId}:`, readResult.message);
+          console.error(`❌ Failed to create read record for member ${memberId}:`, readResult.message);
           await logActivity(req, PANEL, MODULE, 'create', readResult, false);
           // Note: optionally continue or stop execution here
           throw new Error(`Failed to create read record for member ${memberId}`);
@@ -107,7 +107,7 @@ exports.getAllCustomNotifications = async (req, res) => {
 
     if (!result.status) {
       const message = result.message || "Failed to fetch custom notifications.";
-      if (DEBUG) console.error("❌ Fetch failed:", message);
+      console.error("❌ Fetch failed:", message);
 
       await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: message }, false);
       return res.status(500).json({ status: false, message });

@@ -23,7 +23,7 @@ exports.getEmailConfig = async (module, action, status = true) => {
     });
 
     if (!emailConfig) {
-      if (DEBUG) console.warn("⚠️ No matching email configuration found in DB.");
+      console.warn("⚠️ No matching email configuration found in DB.");
       return { status: false, message: "Email configuration not found" };
     }
 

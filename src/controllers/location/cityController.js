@@ -21,7 +21,7 @@ exports.getAllCities = async (req, res) => {
     // ❌ Failed response from service
     if (!result.status) {
       const failMessage = result.message || "Failed to fetch cities.";
-      if (DEBUG) console.error(`❌ [FAIL] Fetch cities:`, failMessage);
+      console.error(`❌ [FAIL] Fetch cities:`, failMessage);
 
       await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: failMessage }, false);
 
