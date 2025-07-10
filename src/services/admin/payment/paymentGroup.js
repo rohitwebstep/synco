@@ -1,4 +1,4 @@
-const { PaymentGroup } = require("../../../models");
+const { PaymentGroup, PaymentPlan } = require("../../../models");
 const { Op } = require("sequelize");
 
 // ✅ Create a group
@@ -26,7 +26,13 @@ exports.createPaymentGroup = async ({ name, description }) => {
 exports.getAllPaymentGroups = async () => {
   try {
     const groups = await PaymentGroup.findAll({
-      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: PaymentPlan,
+          as: "plans",
+        }
+      ],
+      order: [["createdAt", "DESC"]]
     });
 
     return {
@@ -45,7 +51,14 @@ exports.getAllPaymentGroups = async () => {
 // ✅ Get a group by ID
 exports.getPaymentGroupById = async (id) => {
   try {
-    const group = await PaymentGroup.findByPk(id);
+    const group = await PaymentGroup.findByPk(id, {
+      include: [
+        {
+          model: PaymentPlan,
+          as: "plans",
+        }
+      ]
+    });
 
     if (!group) {
       return {
