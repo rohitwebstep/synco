@@ -9,7 +9,7 @@ const MODULE = 'payment-plan';
 // ✅ CREATE Plan
 exports.createPaymentPlan = async (req, res) => {
   const formData = req.body;
-  const { title, price, interval, duration, students } = formData;
+  const { title, price, interval, duration, students, joiningFee, HolidayCampPackage, termsAndCondition } = formData;
 
   if (DEBUG) {
     console.log("📥 STEP 1: Received request to create a new payment plan");
@@ -31,7 +31,7 @@ exports.createPaymentPlan = async (req, res) => {
   }
 
   try {
-    const result = await PaymentPlan.createPlan({ title, price, interval, duration, students });
+    const result = await PaymentPlan.createPlan({ title, price, interval, duration, students, joiningFee, HolidayCampPackage, termsAndCondition });
 
     if (!result.status) {
       if (DEBUG) console.log("⚠️ STEP 3: Creation failed:", result.message);
