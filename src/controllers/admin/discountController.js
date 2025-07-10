@@ -27,10 +27,7 @@ exports.createDiscount = async (req, res) => {
       ],
       patternValidations: {
         value: "decimal",
-        startDatetime: "datetime",
-        endDatetime: "datetime",
-        limitTotalUses: "number",
-        limitPerCustomer: "number"
+        startDatetime: "datetime"
       }
     });
 
