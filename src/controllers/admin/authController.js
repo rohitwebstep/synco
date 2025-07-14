@@ -58,11 +58,21 @@ exports.login = async (req, res) => {
       id: admin.id,
       name: admin.name,
       email: admin.email,
+      role: 'admin',
     });
 
     return res.status(200).json({
       message: "Login successful.",
-      data: { adminId: admin.id, token },
+      data: {
+        admin: {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+          role: 'admin'
+        },
+        adminId: admin.id,
+        token
+      },
     });
   } catch (error) {
     console.error("❌ Login Error:", error);
