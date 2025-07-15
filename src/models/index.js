@@ -46,7 +46,7 @@ Object.values(models).forEach((model) => {
 // ====================== 🔗 Manual Relationships ====================== //
 
 const {
-  Admin, EmailConfig, ActivityLog, Notification, NotificationRead,
+  Admin, AdminRole, EmailConfig, ActivityLog, Notification, NotificationRead,
   CustomNotification, CustomNotificationRead,
   Country, State, City, PaymentPlan, PaymentGroup,
   PaymentGroupHasPlan, Discount, DiscountAppliesTo,
@@ -74,16 +74,6 @@ PaymentPlan.belongsToMany(PaymentGroup, {
   as: "groups"
 });
 
-// 🌍 Location Hierarchy
-Country.hasMany(State, { foreignKey: "countryId", as: "states", onDelete: "CASCADE" });
-State.belongsTo(Country, { foreignKey: "countryId", as: "country", onDelete: "CASCADE" });
-
-State.hasMany(City, { foreignKey: "stateId", as: "cities", onDelete: "CASCADE" });
-City.belongsTo(State, { foreignKey: "stateId", as: "state", onDelete: "CASCADE" });
-
-Country.hasMany(City, { foreignKey: "countryId", as: "cities", onDelete: "CASCADE" });
-City.belongsTo(Country, { foreignKey: "countryId", as: "country", onDelete: "CASCADE" });
-
 // 🎟️ Discounts
 Discount.hasMany(DiscountAppliesTo, { foreignKey: "discountId", as: "appliesTo", onDelete: "CASCADE" });
 DiscountAppliesTo.belongsTo(Discount, { foreignKey: "discountId", as: "discount", onDelete: "CASCADE" });
@@ -96,6 +86,8 @@ DiscountUsage.belongsTo(Discount, { foreignKey: "discountId", as: "discount", on
 module.exports = {
   sequelize,
   Admin,
+  AdminRole,
+  
   ActivityLog,
   EmailConfig,
 

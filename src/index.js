@@ -16,12 +16,13 @@ app.use(bodyParser.json());
 // ✅ Serve static files from /uploads
 app.use('/uploads', express.static('uploads'));
 
+app.use("/api/admin", require("./routes/admin"));           // Manage Admins
+
 // ✅ Auth & Profile
 app.use("/api/admin/auth", require("./routes/admin/authRoutes"));          // Login, Logout, etc.
 app.use("/api/admin/profile", require("./routes/admin/profileRoutes"));    // Admin profile CRUD
 
 // ✅ Member Management
-app.use("/api/admin/member", require("./routes/admin/member"));           // Manage members
 
 // ✅ Notifications
 app.use("/api/admin/notification", require("./routes/admin/notification/notificationRoutes"));  // Notifications (CRUD, read status)

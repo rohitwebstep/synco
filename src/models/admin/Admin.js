@@ -62,6 +62,22 @@ Admin.associate = (models) => {
 
   Admin.hasMany(models.CustomNotification, { foreignKey: "adminId", as: "customNotifications", onDelete: "CASCADE" });
   Admin.hasMany(models.CustomNotificationRead, { foreignKey: "adminId", as: "customNotificationReads", onDelete: "SET NULL" });
+
+  // ✅ Location associations
+  Admin.belongsTo(models.Country, {
+    foreignKey: "countryId",
+    as: "country",
+  });
+
+  Admin.belongsTo(models.State, {
+    foreignKey: "stateId",
+    as: "state",
+  });
+
+  Admin.belongsTo(models.City, {
+    foreignKey: "cityId",
+    as: "cityDetails",
+  });
 };
 
 module.exports = Admin;

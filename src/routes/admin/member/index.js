@@ -13,7 +13,7 @@ const {
 const multer = require("multer");
 const upload = multer();
 
-router.use("/role", require("./roleRoutes")); // Sub-routes
+router.use("/role", require("./roleRoutes"));
 
 // Base: /api/admin/member
 router.post("/", upload.single("profile"), authMiddleware, createMember);

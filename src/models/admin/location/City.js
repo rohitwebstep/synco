@@ -33,4 +33,10 @@ const City = sequelize.define("City", {
     timestamps: true
 });
 
+City.associate = (models) => {
+  City.belongsTo(models.Country, { foreignKey: "countryId", as: "country" });
+  City.belongsTo(models.State, { foreignKey: "stateId", as: "state" });
+  City.hasMany(models.Admin, { foreignKey: "cityId", as: "admins" });
+};
+
 module.exports = City;

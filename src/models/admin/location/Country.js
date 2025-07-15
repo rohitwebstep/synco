@@ -53,4 +53,10 @@ const Country = sequelize.define("Country", {
     timestamps: true
 });
 
+Country.associate = (models) => {
+  Country.hasMany(models.State, { foreignKey: "countryId", as: "states" });
+  Country.hasMany(models.City, { foreignKey: "countryId", as: "cities" });
+  Country.hasMany(models.Admin, { foreignKey: "countryId", as: "admins" });
+};
+
 module.exports = Country;

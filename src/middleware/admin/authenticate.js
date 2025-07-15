@@ -1,6 +1,8 @@
 const { getAdminById } = require("../../services/admin/admin");
 const { verifyToken } = require("../../utils/jwt");
 
+const DEBUG = process.env.DEBUG === 'true';
+
 /**
  * Middleware to authenticate admins using JWT.
  * Adds validated admin info to `req.admin`.
@@ -17,6 +19,8 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
     const result = verifyToken(token);
+
+    if (DEBUG) console.log(`result - `, result);
 
     if (!result.success) {
       let statusCode = 401;
