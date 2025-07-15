@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../config/db");
 
-const Member = sequelize.define(
-  "Member",
+const Admin = sequelize.define(
+  "Admin",
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -49,7 +49,7 @@ const Member = sequelize.define(
     roleId: {
       type: DataTypes.INTEGER.UNSIGNED,
       references: {
-        model: "member_roles", // Must match the tableName of Role model
+        model: "admin_roles", // Must match the tableName of Role model
         key: "id",
       },
     },
@@ -98,9 +98,9 @@ const Member = sequelize.define(
     }
   },
   {
-    tableName: "members",
+    tableName: "admins",
     timestamps: true,
   }
 );
 
-module.exports = Member;
+module.exports = Admin;

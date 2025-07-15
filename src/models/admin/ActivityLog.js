@@ -73,4 +73,14 @@ const ActivityLog = sequelize.define(
   }
 );
 
+// 👇 Define association here
+ActivityLog.associate = (models) => {
+  ActivityLog.belongsTo(models.Admin, {
+    foreignKey: "adminId",
+    as: "admin",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+};
+
 module.exports = ActivityLog;

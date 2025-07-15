@@ -23,8 +23,6 @@ const CustomNotification = sequelize.define(
         "Complaints",
         "Payments",
         "Cancelled Memberships",
-        "Members",
-        "Member Roles",
         "System",
         "Activity Logs",
         "Security",
@@ -53,5 +51,19 @@ const CustomNotification = sequelize.define(
     timestamps: false,
   }
 );
+
+CustomNotification.associate = (models) => {
+  CustomNotification.belongsTo(models.Admin, {
+    foreignKey: "adminId",
+    as: "admin",
+    onDelete: "CASCADE",
+  });
+
+  CustomNotification.hasMany(models.CustomNotificationRead, {
+    foreignKey: "customNotificationId",
+    as: "reads",
+    onDelete: "CASCADE",
+  });
+};
 
 module.exports = CustomNotification;

@@ -14,11 +14,11 @@ const CustomNotificationRead = sequelize.define(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
-    memberId: {
+    adminId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
       references: {
-        model: "members",
+        model: "admins",
         key: "id",
       },
     },
@@ -38,5 +38,19 @@ const CustomNotificationRead = sequelize.define(
     timestamps: false,
   }
 );
+
+CustomNotificationRead.associate = (models) => {
+  CustomNotificationRead.belongsTo(models.CustomNotification, {
+    foreignKey: "customNotificationId",
+    as: "notification",
+    onDelete: "CASCADE",
+  });
+
+  CustomNotificationRead.belongsTo(models.Admin, {
+    foreignKey: "adminId",
+    as: "admin",
+    onDelete: "SET NULL",
+  });
+};
 
 module.exports = CustomNotificationRead;

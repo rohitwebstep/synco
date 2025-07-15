@@ -1,278 +1,95 @@
 const { sequelize } = require("../config/db");
 
-// ====================== 🌐 Core Models ====================== //
-const Admin = require("./admin/Admin");
-const EmailConfig = require("./Email");
+// =================== Import All Models =================== //
+const models = {
+  // 🌐 Core
+  Admin: require("./admin/Admin"),
+  EmailConfig: require("./Email"),
 
-// ====================== 📋 Activity & Logs ====================== //
-const ActivityLog = require("./admin/ActivityLog");
+  // 📋 Activity & Logs
+  ActivityLog: require("./admin/ActivityLog"),
 
-// ====================== 👥 Member & Roles ====================== //
-const Member = require("./member/Member");
-const MemberRole = require("./member/MemberRole");
-const MemberPermission = require("./member/MemberPermission");
-const MemberHasPermission = require("./member/MemberHasPermission");
+  // 👥 Admin Roles & Permission
+  AdminRole: require("./admin/AdminRole"),
+  AdminPermission: require("./admin/permission/AdminPermission"),
+  AdminHasPermission: require("./admin/permission/AdminHasPermission"),
 
-// ====================== 🔔 Notifications ====================== //
-const Notification = require("./admin/notification/Notification");
-const NotificationRead = require("./admin/notification/NotificationRead");
-const CustomNotification = require("./admin/notification/CustomNotification");
-const CustomNotificationRead = require("./admin/notification/CustomNotificationRead");
+  // 🔔 Notifications
+  Notification: require("./admin/notification/Notification"),
+  NotificationRead: require("./admin/notification/NotificationRead"),
+  CustomNotification: require("./admin/notification/CustomNotification"),
+  CustomNotificationRead: require("./admin/notification/CustomNotificationRead"),
 
-// ====================== 💳 Payment System ====================== //
-const PaymentPlan = require("./admin/payment/PaymentPlan");
-const PaymentGroup = require("./admin/payment/PaymentGroup");
-const PaymentGroupHasPlan = require("./admin/payment/PaymentGroupHasPlan");
+  // 💳 Payment System
+  PaymentPlan: require("./admin/payment/PaymentPlan"),
+  PaymentGroup: require("./admin/payment/PaymentGroup"),
+  PaymentGroupHasPlan: require("./admin/payment/PaymentGroupHasPlan"),
 
-// ====================== 🎟️ Discount System ====================== //
-const Discount = require("./admin/discount/Discount");
-const DiscountAppliesTo = require("./admin/discount/DiscountAppliesTo");
-const DiscountUsage = require("./admin/discount/DiscountUsage");
+  // 🎟️ Discount System
+  Discount: require("./admin/discount/Discount"),
+  DiscountAppliesTo: require("./admin/discount/DiscountAppliesTo"),
+  DiscountUsage: require("./admin/discount/DiscountUsage"),
 
-// ====================== 🌍 Location System ====================== //
-const Country = require("./admin/location/Country");
-const State = require("./admin/location/State");
-const City = require("./admin/location/City");
+  // 🌍 Location System
+  Country: require("./admin/location/Country"),
+  State: require("./admin/location/State"),
+  City: require("./admin/location/City"),
+};
 
-
-// ====================== 🔗 Model Associations ====================== //
-
-/* 🌐 Admin Relations */
-
-// Admin ↔ ActivityLog
-Admin.hasMany(ActivityLog, {
-  foreignKey: { name: "adminId", allowNull: false },
-  as: "activityLogs",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-ActivityLog.belongsTo(Admin, {
-  foreignKey: { name: "adminId", allowNull: false },
-  as: "admin",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
+// =================== Apply Model-Level Associations =================== //
+Object.values(models).forEach((model) => {
+  if (typeof model.associate === "function") {
+    model.associate(models);
+  }
 });
 
-// Admin ↔ Notification
-Admin.hasMany(Notification, {
-  foreignKey: { name: "adminId", allowNull: false },
-  as: "sentNotifications",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-Notification.belongsTo(Admin, {
-  foreignKey: { name: "adminId", allowNull: false },
-  as: "sender",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// ====================== 🔗 Manual Relationships ====================== //
 
-// Admin ↔ NotificationRead
-Admin.hasMany(NotificationRead, {
-  foreignKey: "adminId",
-  as: "adminReads",
-});
-NotificationRead.belongsTo(Admin, {
-  foreignKey: "adminId",
-  as: "admin",
-});
+const {
+  Admin, EmailConfig, ActivityLog, Notification, NotificationRead,
+  CustomNotification, CustomNotificationRead,
+  Country, State, City, PaymentPlan, PaymentGroup,
+  PaymentGroupHasPlan, Discount, DiscountAppliesTo,
+  DiscountUsage
+} = models;
 
-// Admin ↔ CustomNotification
-Admin.hasMany(CustomNotification, {
-  foreignKey: { name: "adminId", allowNull: false },
-  as: "customNotifications",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-CustomNotification.belongsTo(Admin, {
-  foreignKey: { name: "adminId", allowNull: false },
-  as: "admin",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// 🌐 Admin ↔ Notifications
+Admin.hasMany(Notification, { foreignKey: "adminId", as: "sentNotifications", onDelete: "CASCADE" });
+Notification.belongsTo(Admin, { foreignKey: "adminId", as: "sender", onDelete: "CASCADE" });
 
+Admin.hasMany(NotificationRead, { foreignKey: "adminId", as: "notificationReads" });
+NotificationRead.belongsTo(Admin, { foreignKey: "adminId", as: "admin" });
 
-/* 👥 Member Relations */
-
-// Member ↔ Role
-Member.belongsTo(MemberRole, {
-  foreignKey: "roleId",
-  as: "role",
-});
-MemberRole.hasMany(Member, {
-  foreignKey: "roleId",
-  as: "members",
-});
-
-// Member ↔ MemberHasPermission
-Member.hasMany(MemberHasPermission, {
-  foreignKey: "memberId",
-  as: "permissions",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-MemberHasPermission.belongsTo(Member, {
-  foreignKey: "memberId",
-  as: "member",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-
-// MemberPermission ↔ MemberHasPermission
-MemberPermission.hasMany(MemberHasPermission, {
-  foreignKey: "permissionId",
-  as: "memberAssignments",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-MemberHasPermission.belongsTo(MemberPermission, {
-  foreignKey: "permissionId",
-  as: "permission",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-
-// Member ↔ Country
-Member.belongsTo(Country, {
-  foreignKey: "countryId",
-  as: "country",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
-Country.hasMany(Member, {
-  foreignKey: "countryId",
-  as: "membersFromCountry",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
-
-// Member ↔ CustomNotificationRead
-Member.hasMany(CustomNotificationRead, {
-  foreignKey: { name: "memberId", allowNull: true },
-  as: "customNotificationReads",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
-CustomNotificationRead.belongsTo(Member, {
-  foreignKey: { name: "memberId", allowNull: true },
-  as: "member",
-  onDelete: "SET NULL",
-  onUpdate: "CASCADE",
-});
-
-
-/* 🔔 CustomNotification ↔ CustomNotificationRead */
-CustomNotification.hasMany(CustomNotificationRead, {
-  foreignKey: { name: "customNotificationId", allowNull: false },
-  as: "reads",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-CustomNotificationRead.belongsTo(CustomNotification, {
-  foreignKey: { name: "customNotificationId", allowNull: false },
-  as: "notification",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-
-
-/* 💳 PaymentGroup ↔ PaymentPlan (Many-to-Many) */
+// 💳 PaymentGroup ↔ PaymentPlan (Many-to-Many)
 PaymentGroup.belongsToMany(PaymentPlan, {
   through: PaymentGroupHasPlan,
   foreignKey: "payment_group_id",
   otherKey: "payment_plan_id",
-  as: "plans",
+  as: "plans"
 });
 PaymentPlan.belongsToMany(PaymentGroup, {
   through: PaymentGroupHasPlan,
   foreignKey: "payment_plan_id",
   otherKey: "payment_group_id",
-  as: "groups",
+  as: "groups"
 });
 
+// 🌍 Location Hierarchy
+Country.hasMany(State, { foreignKey: "countryId", as: "states", onDelete: "CASCADE" });
+State.belongsTo(Country, { foreignKey: "countryId", as: "country", onDelete: "CASCADE" });
 
-/* 🌍 Location Relations */
+State.hasMany(City, { foreignKey: "stateId", as: "cities", onDelete: "CASCADE" });
+City.belongsTo(State, { foreignKey: "stateId", as: "state", onDelete: "CASCADE" });
 
-// Country ↔ State
-Country.hasMany(State, {
-  foreignKey: "countryId",
-  as: "states",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-State.belongsTo(Country, {
-  foreignKey: "countryId",
-  as: "country",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+Country.hasMany(City, { foreignKey: "countryId", as: "cities", onDelete: "CASCADE" });
+City.belongsTo(Country, { foreignKey: "countryId", as: "country", onDelete: "CASCADE" });
 
-// State ↔ City
-State.hasMany(City, {
-  foreignKey: "stateId",
-  as: "cities",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-City.belongsTo(State, {
-  foreignKey: "stateId",
-  as: "state",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// 🎟️ Discounts
+Discount.hasMany(DiscountAppliesTo, { foreignKey: "discountId", as: "appliesTo", onDelete: "CASCADE" });
+DiscountAppliesTo.belongsTo(Discount, { foreignKey: "discountId", as: "discount", onDelete: "CASCADE" });
 
-// Country ↔ City
-Country.hasMany(City, {
-  foreignKey: "countryId",
-  as: "cities",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-City.belongsTo(Country, {
-  foreignKey: "countryId",
-  as: "country",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
-
-
-/* 🎟️ Discount System */
-
-// Discount ↔ DiscountAppliesTo
-Discount.hasMany(DiscountAppliesTo, {
-  foreignKey: "discountId",
-  as: "appliesTo",
-  onDelete: "CASCADE",
-});
-DiscountAppliesTo.belongsTo(Discount, {
-  foreignKey: "discountId",
-  as: "discount",
-  onDelete: "CASCADE",
-});
-
-// Discount ↔ DiscountUsage
-Discount.hasMany(DiscountUsage, {
-  foreignKey: "discountId",
-  as: "usages",
-  onDelete: "CASCADE",
-});
-DiscountUsage.belongsTo(Discount, {
-  foreignKey: "discountId",
-  as: "discount",
-  onDelete: "CASCADE",
-});
-
-// Member ↔ DiscountUsage
-Member.hasMany(DiscountUsage, {
-  foreignKey: "memberId",
-  as: "discountUsages",
-  onDelete: "CASCADE",
-});
-DiscountUsage.belongsTo(Member, {
-  foreignKey: "memberId",
-  as: "member",
-  onDelete: "CASCADE",
-});
+Discount.hasMany(DiscountUsage, { foreignKey: "discountId", as: "usages", onDelete: "CASCADE" });
+DiscountUsage.belongsTo(Discount, { foreignKey: "discountId", as: "discount", onDelete: "CASCADE" });
 
 
 // ====================== 📦 Module Exports ====================== //
@@ -281,11 +98,6 @@ module.exports = {
   Admin,
   ActivityLog,
   EmailConfig,
-
-  Member,
-  MemberRole,
-  MemberPermission,
-  MemberHasPermission,
 
   Notification,
   NotificationRead,
