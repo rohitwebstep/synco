@@ -29,7 +29,7 @@ exports.getAllPaymentGroups = async () => {
       include: [
         {
           model: PaymentPlan,
-          as: "plans",
+          as: "paymentPlans",
         }
       ],
       order: [["createdAt", "DESC"]]
@@ -55,7 +55,7 @@ exports.getPaymentGroupById = async (id) => {
       include: [
         {
           model: PaymentPlan,
-          as: "plans",
+          as: "paymentPlans",
         }
       ]
     });
