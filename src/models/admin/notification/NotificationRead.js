@@ -33,4 +33,19 @@ const NotificationRead = sequelize.define(
   }
 );
 
+// ✅ Association
+NotificationRead.associate = (models) => {
+  NotificationRead.belongsTo(models.Notification, {
+    foreignKey: "notificationId",
+    as: "notification",
+    onDelete: "CASCADE",
+  });
+
+  NotificationRead.belongsTo(models.Admin, {
+    foreignKey: "adminId",
+    as: "admin",
+    onDelete: "SET NULL",
+  });
+};
+
 module.exports = NotificationRead;

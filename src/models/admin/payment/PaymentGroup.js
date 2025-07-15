@@ -13,4 +13,14 @@ const PaymentGroup = sequelize.define("PaymentGroup", {
   timestamps: true,
 });
 
+// ✅ Association
+PaymentGroup.associate = (models) => {
+  PaymentGroup.belongsToMany(models.PaymentPlan, {
+    through: models.PaymentGroupHasPlan,
+    foreignKey: "payment_group_id",
+    otherKey: "payment_plan_id",
+    as: "paymentPlans",
+  });
+};
+
 module.exports = PaymentGroup;

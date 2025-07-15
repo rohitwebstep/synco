@@ -78,6 +78,26 @@ Admin.associate = (models) => {
     foreignKey: "cityId",
     as: "cityDetails",
   });
+
+  Admin.hasMany(models.DiscountUsage, {
+    foreignKey: "adminId",
+    as: "discountUsages",
+    onDelete: "CASCADE",
+  });
+
+  // Notifications sent by admin
+  Admin.hasMany(models.Notification, {
+    foreignKey: "adminId",
+    as: "notifications",
+    onDelete: "CASCADE",
+  });
+
+  // Notifications read by admin
+  Admin.hasMany(models.NotificationRead, {
+    foreignKey: "adminId",
+    as: "notificationReads",
+    onDelete: "SET NULL",
+  });
 };
 
 module.exports = Admin;

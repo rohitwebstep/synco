@@ -42,11 +42,23 @@ const authMiddleware = async (req, res, next) => {
         .json({ message: "Admin associated with token not found." });
     }
 
+    if (DEBUG) {
+      console.table({
+        id: admin.id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        role: admin.role.role,
+      });
+    }
+
     // Attach validated admin to request
     req.admin = {
       id: admin.id,
-      name: admin.name,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
       email: admin.email,
+      role: admin.role.role,
     };
 
     next();

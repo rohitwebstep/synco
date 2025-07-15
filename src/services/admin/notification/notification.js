@@ -70,9 +70,15 @@ exports.markAsRead = async (adminId) => {
 };
 
 // ✅ Get all notifications with read status
-exports.getAllNotifications = async (adminId) => {
+exports.getAllNotifications = async (adminId, category = null) => {
   try {
+    const whereCondition = {};
+    if (category) {
+      whereCondition.category = category;
+    }
+
     const notifications = await Notification.findAll({
+      where: whereCondition,
       order: [["createdAt", "DESC"]],
     });
 
@@ -101,43 +107,6 @@ exports.getAllNotifications = async (adminId) => {
     return {
       status: false,
       message: `Failed to retrieve notifications. ${error.message}`,
-    };
-  }
-};
-
-// ✅ Get notifications filtered by category with read status
-exports.getNotificationsByCategory = async (adminId, category) => {
-  try {
-    const notifications = await Notification.findAll({
-      where: { category },
-      order: [["createdAt", "DESC"]],
-    });
-
-    const readRecords = await NotificationRead.findAll({
-      where: { adminId },
-      attributes: ["notificationId"],
-    });
-
-    const readIdsSet = new Set(readRecords.map(r => r.notificationId));
-
-    const filteredList = notifications.map(notification => ({
-      id: notification.id,
-      title: notification.title,
-      description: notification.description,
-      category: notification.category,
-      createdAt: notification.createdAt,
-      isRead: readIdsSet.has(notification.id),
-    }));
-
-    return {
-      status: true,
-      data: filteredList,
-      message: `${filteredList.length} notification(s) found under category '${category}'.`,
-    };
-  } catch (error) {
-    return {
-      status: false,
-      message: `Failed to retrieve notifications by category. ${error.message}`,
     };
   }
 };

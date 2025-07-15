@@ -1,4 +1,4 @@
-const { CustomNotification, CustomNotificationRead, Admin, Member } = require("../../../models");
+const { CustomNotification, CustomNotificationRead, Admin } = require("../../../models");
 const { Op } = require("sequelize");
 
 // ✅ Create a notification
@@ -28,12 +28,12 @@ exports.createCustomNotification = async (title, description, category, adminId)
 };
 
 // ✅ Create a read record for a custom notification
-exports.createCustomNotificationReads = async ({ customNotificationId, memberId, status = false }) => {
+exports.createCustomNotificationReads = async ({ customNotificationId, adminId, status = false }) => {
   try {
-    console.log(`{ customNotificationId, memberId, status = false } - `, { customNotificationId, memberId, status });
+    console.log(`{ customNotificationId, adminId, status = false } - `, { customNotificationId, adminId, status });
     const readRecord = await CustomNotificationRead.create({
       customNotificationId,
-      memberId,
+      adminId,
       status,
       createdAt: new Date(),
     });
@@ -54,19 +54,24 @@ exports.createCustomNotificationReads = async ({ customNotificationId, memberId,
 };
 
 // ✅ Get all custom notifications
-exports.getAllCustomNotifications = async () => {
+exports.getAllCustomNotifications = async (adminId = null, category = null) => {
   try {
+    const where = {};
+    if (adminId) where.adminId = adminId;
+    if (category) where.category = category;
+
     const notifications = await CustomNotification.findAll({
+      where,
       order: [['createdAt', 'DESC']],
       include: [
         {
           model: CustomNotificationRead,
           as: 'reads',
-          attributes: ['id', 'memberId', 'status', 'createdAt'],
+          attributes: ['id', 'adminId', 'status', 'createdAt'],
           include: [
             {
-              model: Member,
-              as: 'member',
+              model: Admin,
+              as: 'admin',
               attributes: ['id', 'firstName', 'lastName', 'email', 'profile']
             }
           ]
@@ -74,14 +79,14 @@ exports.getAllCustomNotifications = async () => {
         {
           model: Admin,
           as: 'admin',
-          attributes: ['id', 'name', 'email'],
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profile']
         }
       ]
     });
 
     return {
       status: true,
-      message: "Custom notifications fetched successfully.",
+      message: `${notifications.length} notification(s) retrieved successfully.`,
       data: notifications,
     };
   } catch (error) {
@@ -89,6 +94,41 @@ exports.getAllCustomNotifications = async () => {
     return {
       status: false,
       message: `Error fetching custom notifications. ${error.message}`,
+    };
+  }
+};
+
+// ✅ Mark all unread custom notifications as read for a given admin
+exports.markAsRead = async (adminId) => {
+  try {
+    if (!adminId) {
+      return {
+        status: false,
+        message: "Admin ID is required to mark notifications as read.",
+      };
+    }
+
+    // Update all unread records for this admin
+    const [updatedCount] = await CustomNotificationRead.update(
+      { status: true },
+      {
+        where: {
+          adminId,
+          status: false,
+        },
+      }
+    );
+
+    return {
+      status: true,
+      message: `${updatedCount} notification(s) marked as read.`,
+      updatedCount,
+    };
+  } catch (error) {
+    console.error("❌ Error in markAsRead:", error);
+    return {
+      status: false,
+      message: `Failed to mark notifications as read. ${error.message}`,
     };
   }
 };

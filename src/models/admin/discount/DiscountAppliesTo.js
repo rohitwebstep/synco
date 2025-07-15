@@ -42,4 +42,13 @@ const DiscountAppliesTo = sequelize.define(
     }
 );
 
+// ✅ Association
+DiscountAppliesTo.associate = (models) => {
+  DiscountAppliesTo.belongsTo(models.Discount, {
+    foreignKey: "discountId",
+    as: "discount",
+    onDelete: "CASCADE"
+  });
+};
+
 module.exports = DiscountAppliesTo;

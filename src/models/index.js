@@ -53,41 +53,12 @@ const {
   DiscountUsage
 } = models;
 
-// 🌐 Admin ↔ Notifications
-Admin.hasMany(Notification, { foreignKey: "adminId", as: "sentNotifications", onDelete: "CASCADE" });
-Notification.belongsTo(Admin, { foreignKey: "adminId", as: "sender", onDelete: "CASCADE" });
-
-Admin.hasMany(NotificationRead, { foreignKey: "adminId", as: "notificationReads" });
-NotificationRead.belongsTo(Admin, { foreignKey: "adminId", as: "admin" });
-
-// 💳 PaymentGroup ↔ PaymentPlan (Many-to-Many)
-PaymentGroup.belongsToMany(PaymentPlan, {
-  through: PaymentGroupHasPlan,
-  foreignKey: "payment_group_id",
-  otherKey: "payment_plan_id",
-  as: "plans"
-});
-PaymentPlan.belongsToMany(PaymentGroup, {
-  through: PaymentGroupHasPlan,
-  foreignKey: "payment_plan_id",
-  otherKey: "payment_group_id",
-  as: "groups"
-});
-
-// 🎟️ Discounts
-Discount.hasMany(DiscountAppliesTo, { foreignKey: "discountId", as: "appliesTo", onDelete: "CASCADE" });
-DiscountAppliesTo.belongsTo(Discount, { foreignKey: "discountId", as: "discount", onDelete: "CASCADE" });
-
-Discount.hasMany(DiscountUsage, { foreignKey: "discountId", as: "usages", onDelete: "CASCADE" });
-DiscountUsage.belongsTo(Discount, { foreignKey: "discountId", as: "discount", onDelete: "CASCADE" });
-
-
 // ====================== 📦 Module Exports ====================== //
 module.exports = {
   sequelize,
   Admin,
   AdminRole,
-  
+
   ActivityLog,
   EmailConfig,
 

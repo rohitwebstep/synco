@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 const Discount = require("./Discount"); // Adjust path if needed
-const Member = require("../../member/Member"); // Adjust path if needed
+const Admin = require("../../admin/Admin"); // Adjust path if needed
 
 const DiscountUsage = sequelize.define(
     "DiscountUsage",
@@ -23,13 +23,13 @@ const DiscountUsage = sequelize.define(
             },
             onDelete: "CASCADE"
         },
-        memberId: {
+        adminId: {
             type: DataTypes.INTEGER.UNSIGNED,
             allowNull: false,
-            field: "member_id",
-            comment: "Reference to members table",
+            field: "admin_id",
+            comment: "Reference to admins table",
             references: {
-                model: Member,
+                model: Admin,
                 key: "id"
             },
             onDelete: "CASCADE"
@@ -48,5 +48,20 @@ const DiscountUsage = sequelize.define(
         comment: "Tracks when a customer uses a discount"
     }
 );
+
+// ✅ Associations
+DiscountUsage.associate = (models) => {
+  DiscountUsage.belongsTo(models.Discount, {
+    foreignKey: "discountId",
+    as: "discount",
+    onDelete: "CASCADE"
+  });
+
+  DiscountUsage.belongsTo(models.Admin, {
+    foreignKey: "adminId",
+    as: "admin",
+    onDelete: "CASCADE"
+  });
+};
 
 module.exports = DiscountUsage;

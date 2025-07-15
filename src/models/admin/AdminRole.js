@@ -10,6 +10,7 @@ const AdminRole = sequelize.define("AdminRole", {
   role: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
   },
 }, {
   tableName: "admin_roles",

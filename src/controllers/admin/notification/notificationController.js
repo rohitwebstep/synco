@@ -1,4 +1,5 @@
 const notificationModel = require("../../../services/admin/notification/notification");
+const customNotificationModel = require("../../../services/admin/notification/customNotification");
 const { logActivity } = require("../../../utils/admin/activityLogger");
 
 const validCategories = [
@@ -6,8 +7,8 @@ const validCategories = [
   "Payments",
   "Discounts",
   "Cancelled Memberships",
-  "Members",
-  "Member Roles",
+  "Admins",
+  "Admin Roles",
   "System",
   "Activity Logs",
   "Security",
@@ -25,64 +26,72 @@ const DEBUG = process.env.DEBUG === 'true';
 const PANEL = 'admin';
 const MODULE = 'notification';
 
-// ✅ Create a new notification
-exports.createNotification = async (req, res) => {
-  const { title, description, category } = req.body;
+/*
+  // ✅ Create a new notification
+  exports.createNotification = async (req, res) => {
+    const { title, description, category } = req.body;
 
-  if (DEBUG) console.log(`📥 Create request:`, { title, description, category });
+    if (DEBUG) console.log(`📥 Create request:`, { title, description, category });
 
-  if (!category) {
-    const message = "Category is required.";
-    console.warn(`⚠️ ${message}`);
-    await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
-    return res.status(400).json({ status: false, message });
-  }
-
-  if (!validCategories.includes(category)) {
-    const message = `Invalid category. Valid categories are: ${validCategories.join(", ")}`;
-    console.warn(`🚫 ${message}`);
-    await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
-    return res.status(422).json({ status: false, message });
-  }
-
-  try {
-    const result = await notificationModel.createNotification(
-      title || null,
-      description || null,
-      category,
-      req.admin.id
-    );
-
-    if (!result.status) {
-      console.error(`❌ Creation failed:`, result.message);
-      await logActivity(req, PANEL, MODULE, 'create', result, false);
-      return res.status(500).json({ status: false, message: result.message });
+    if (!category) {
+      const message = "Category is required.";
+      console.warn(`⚠️ ${message}`);
+      await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
+      return res.status(400).json({ status: false, message });
     }
 
-    if (DEBUG) console.log(`✅ Created notification:`, result.data);
-    await logActivity(req, PANEL, MODULE, 'create', result, true);
+    if (!validCategories.includes(category)) {
+      const message = `Invalid category. Valid categories are: ${validCategories.join(", ")}`;
+      console.warn(`🚫 ${message}`);
+      await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
+      return res.status(422).json({ status: false, message });
+    }
 
-    return res.status(201).json({
-      status: true,
-      message: result.message,
-      data: result.data,
-    });
-  } catch (error) {
-    console.error(`❌ Exception while creating notification:`, error);
-    await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: error.message }, false);
-    return res.status(500).json({
-      status: false,
-      message: "Server error while creating notification.",
-    });
-  }
-};
+    try {
+      const result = await notificationModel.createNotification(
+        title || null,
+        description || null,
+        category,
+        req.admin.id
+      );
+
+      if (!result.status) {
+        console.error(`❌ Creation failed:`, result.message);
+        await logActivity(req, PANEL, MODULE, 'create', result, false);
+        return res.status(500).json({ status: false, message: result.message });
+      }
+
+      if (DEBUG) console.log(`✅ Created notification:`, result.data);
+      await logActivity(req, PANEL, MODULE, 'create', result, true);
+
+      return res.status(201).json({
+        status: true,
+        message: result.message,
+        data: result.data,
+      });
+    } catch (error) {
+      console.error(`❌ Exception while creating notification:`, error);
+      await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: error.message }, false);
+      return res.status(500).json({
+        status: false,
+        message: "Server error while creating notification.",
+      });
+    }
+  };
+*/
 
 // ✅ Mark all unread notifications as read
 exports.markNotificationAsRead = async (req, res) => {
   if (DEBUG) console.log(`📩 Marking notifications as read for Admin ID: ${req.admin.id}`);
 
   try {
-    const result = await notificationModel.markAsRead(req.admin.id);
+
+    let result;
+    if (req.admin.role.toLowerCase() == 'admin') {
+      result = await notificationModel.markAsRead(req.admin.id);
+    } else {
+      result = await customNotificationModel.markAsRead(req.admin.id);
+    }
 
     if (!result.status) {
       console.error(`❌ Failed to mark as read:`, result.message);
@@ -111,9 +120,14 @@ exports.markNotificationAsRead = async (req, res) => {
 // ✅ Get all notifications
 exports.getAllNotifications = async (req, res) => {
   if (DEBUG) console.log(`📨 Fetching all notifications for Admin ID: ${req.admin.id}`);
-
+  const category = req.query.category;
   try {
-    const result = await notificationModel.getAllNotifications(req.admin.id);
+
+    if (req.admin.role.toLowerCase() == 'admin') {
+      result = await notificationModel.getAllNotifications(req.admin.id, category);
+    } else {
+      result = await customNotificationModel.getAllCustomNotifications(req.admin.id, category);
+    }
 
     if (!result.status) {
       console.error(`❌ Fetch failed:`, result.message);
@@ -137,48 +151,6 @@ exports.getAllNotifications = async (req, res) => {
     return res.status(500).json({
       status: false,
       message: "Server error while fetching notifications.",
-    });
-  }
-};
-
-// ✅ Get notifications by category
-exports.getNotificationsByCategory = async (req, res) => {
-  const { category } = req.params;
-
-  if (DEBUG) console.log(`🔍 Fetching notifications for category: ${category}`);
-
-  if (!validCategories.includes(category)) {
-    const message = `Invalid category. Valid categories are: ${validCategories.join(", ")}`;
-    console.warn(`🚫 ${message}`);
-    await logActivity(req, PANEL, MODULE, 'listByCategory', { oneLineMessage: message }, false);
-    return res.status(422).json({ status: false, message });
-  }
-
-  try {
-    const result = await notificationModel.getNotificationsByCategory(req.admin.id, category);
-
-    if (!result.status) {
-      console.error(`❌ Fetch by category failed:`, result.message);
-      await logActivity(req, PANEL, MODULE, 'listByCategory', result, false);
-      return res.status(500).json({ status: false, message: result.message });
-    }
-
-    if (DEBUG) console.log(`📂 Found: ${result.data.notifications?.length} notifications`);
-    await logActivity(req, PANEL, MODULE, 'listByCategory', {
-      oneLineMessage: `Fetched ${result.data.notifications?.length || 0} notifications in '${category}' category.`,
-    }, true);
-
-    return res.status(200).json({
-      status: true,
-      message: result.message,
-      data: result.data,
-    });
-  } catch (error) {
-    console.error(`❌ Error fetching by category:`, error);
-    await logActivity(req, PANEL, MODULE, 'listByCategory', { oneLineMessage: error.message }, false);
-    return res.status(500).json({
-      status: false,
-      message: "Server error while fetching notifications by category.",
     });
   }
 };

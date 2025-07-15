@@ -6,8 +6,8 @@ const validCategories = [
   "Payments",
   "Discounts",
   "Cancelled Memberships",
-  "Members",
-  "Member Roles",
+  "Admins",
+  "Admin Roles",
   "System",
   "Activity Logs",
   "Security",
@@ -22,7 +22,7 @@ const validCategories = [
 
 const DEBUG = process.env.DEBUG === 'true';
 const PANEL = 'admin';
-const MODULE = 'notification';
+const MODULE = 'custom-notification';
 
 // ✅ Create a new notification
 exports.createCustomNotification = async (req, res) => {
@@ -59,22 +59,22 @@ exports.createCustomNotification = async (req, res) => {
     }
 
     // ✅ Create notification reads for each recipient
-    const memberIds = (recipients || "").split(',').map(id => id.trim()).filter(Boolean);
+    const adminIds = (recipients || "").split(',').map(id => id.trim()).filter(Boolean);
 
     await Promise.all(
-      memberIds.map(async (memberId) => {
+      adminIds.map(async (adminId) => {
         const payload = {
           customNotificationId: result.data.id,
-          memberId: parseInt(memberId, 10)
+          adminId: parseInt(adminId, 10)
         };
 
         const readResult = await customNotificationModel.createCustomNotificationReads(payload);
 
         if (!readResult.status) {
-          console.error(`❌ Failed to create read record for member ${memberId}:`, readResult.message);
+          console.error(`❌ Failed to create read record for admin ${adminId}:`, readResult.message);
           await logActivity(req, PANEL, MODULE, 'create', readResult, false);
           // Note: optionally continue or stop execution here
-          throw new Error(`Failed to create read record for member ${memberId}`);
+          throw new Error(`Failed to create read record for admin ${adminId}`);
         }
       })
     );

@@ -71,4 +71,19 @@ const Discount = sequelize.define(
   }
 );
 
+// ✅ Associations
+Discount.associate = (models) => {
+  Discount.hasMany(models.DiscountUsage, {
+    foreignKey: "discountId",
+    as: "usages",
+    onDelete: "CASCADE",
+  });
+
+  Discount.hasMany(models.DiscountAppliesTo, {
+    foreignKey: "discountId",
+    as: "appliesTo",
+    onDelete: "CASCADE",
+  });
+};
+
 module.exports = Discount;
