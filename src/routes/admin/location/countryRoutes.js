@@ -6,7 +6,6 @@ const {
   getAllCountries
 } = require("../../../controllers/location/countryController");
 
-// Base: /api/admin/member/role
 router.get("/", authMiddleware, getAllCountries);
 
 module.exports = router;

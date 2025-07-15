@@ -7,7 +7,7 @@ const {
   getAllStatesOfCountry
 } = require("../../controllers/location/countryController");
 
-// Base: /api/admin/member/role
+
 router.get("/", getAllCountries);
 router.get("/:countryId/state", getAllStatesOfCountry);
 

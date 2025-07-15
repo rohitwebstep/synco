@@ -36,13 +36,6 @@ app.use("/api/admin/discount", require("./routes/admin/discountRoutes"));  // Di
 
 app.use("/api/admin", require("./routes/admin"));           // Manage Admins
 
-// ✅ Auth & Profile
-app.use("/api/member/auth", require("./routes/member/authRoutes"));          // Login, Logout, etc.
-app.use("/api/member/profile", require("./routes/member/profileRoutes"));    // Member profile CRUD
-
-// ✅ Notifications
-app.use("/api/member/notification", require("./routes/member/notification/notificationRoutes"));  // Notifications (CRUD, read status)
-
 app.use("/api/location", require("./routes/location"));           // Manage members
 
 // Error handling middleware

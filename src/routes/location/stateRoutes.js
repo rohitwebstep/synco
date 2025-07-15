@@ -7,7 +7,7 @@ const {
   getAllCitiesOfState
 } = require("../../controllers/location/stateController");
 
-// Base: /api/admin/member/role
+
 router.get("/", getAllStates);
 router.get("/:stateId/city", getAllCitiesOfState);
 

@@ -6,7 +6,6 @@ const {
   getAllStates
 } = require("../../../controllers/location/stateController");
 
-// Base: /api/admin/member/role
 router.get("/", authMiddleware, getAllStates);
 
 module.exports = router;
