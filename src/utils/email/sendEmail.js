@@ -55,13 +55,30 @@ async function sendEmail(config, mailData) {
         user: username,
         pass: password,
       },
+       tls: {
+    rejectUnauthorized: false, // ✅ this fixes self-signed certificate error
+  },
     });
+
+    // const mailOptions = {
+    //   from: `${from_name} <${from_email}>`,
+    //   to: formatAddressList(recipient),
+    //   cc: formatAddressList(cc),
+    //   bcc: formatAddressList(bcc),
+    //   subject,
+    //   html: htmlBody,
+    //   attachments: formatAttachments(attachments),
+    // };
 
     const mailOptions = {
       from: `${from_name} <${from_email}>`,
-      to: formatAddressList(recipient),
-      cc: formatAddressList(cc),
-      bcc: formatAddressList(bcc),
+      // to: formatAddressList(recipient),
+      // cc: formatAddressList(cc),
+      // bcc: formatAddressList(bcc),
+      to: formatAddressList(recipient).join(", "),
+      cc: formatAddressList(cc).join(", "),
+      bcc: formatAddressList(bcc).join(", "),
+
       subject,
       html: htmlBody,
       attachments: formatAttachments(attachments),
@@ -69,9 +86,12 @@ async function sendEmail(config, mailData) {
 
     const info = await transporter.sendMail(mailOptions);
 
-    console.log(
-      `📤 Email sent to ${mailOptions.to.join(", ")} | ID: ${info.messageId}`
-    );
+    // console.log(
+    //   `📤 Email sent to ${mailOptions.to.join(", ")} | ID: ${info.messageId}`
+    // );
+
+    console.log(`📤 Email sent to ${mailOptions.to} | ID: ${info.messageId}`);
+
     return { status: true, messageId: info.messageId };
   } catch (error) {
     console.error("❌ Email Error:", error.message || error);

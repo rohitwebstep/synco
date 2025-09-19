@@ -52,7 +52,21 @@ const CustomNotification = sequelize.define(
   }
 );
 
-CustomNotification.associate = (models) => {
+// CustomNotification.associate = (models) => {
+//   CustomNotification.belongsTo(models.Admin, {
+//     foreignKey: "adminId",
+//     as: "admin",
+//     onDelete: "CASCADE",
+//   });
+
+//   CustomNotification.hasMany(models.CustomNotificationRead, {
+//     foreignKey: "customNotificationId",
+//     as: "reads",
+//     onDelete: "CASCADE",
+//   });
+// };
+
+CustomNotification.associate = function (models) {
   CustomNotification.belongsTo(models.Admin, {
     foreignKey: "adminId",
     as: "admin",

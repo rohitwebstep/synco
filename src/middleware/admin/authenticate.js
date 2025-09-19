@@ -1,15 +1,17 @@
 const { getAdminById } = require("../../services/admin/admin");
 const { verifyToken } = require("../../utils/jwt");
 
-const DEBUG = process.env.DEBUG === 'true';
+const DEBUG = process.env.DEBUG === "true";
 
 /**
  * Middleware to authenticate admins using JWT.
  * Adds validated admin info to `req.admin`.
  */
 const authMiddleware = async (req, res, next) => {
+  // console.log("🔍 Incoming request:", req.method, req.originalUrl);
   try {
     const authHeader = req.headers.authorization;
+    // console.log("🔍 Authorization header:", authHeader);
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
@@ -41,7 +43,15 @@ const authMiddleware = async (req, res, next) => {
         .status(404)
         .json({ message: "Admin associated with token not found." });
     }
-
+    // ❌ Block suspended admins
+    if (admin.status === "suspend") {
+      return res.status(403).json({
+        status: false,
+        message: "Access denied. Your account has been suspended.",
+        code: "ACCOUNT_SUSPENDED",
+      });
+    }
+    // console.log("admindataaaa", admin);
     if (DEBUG) {
       console.table({
         id: admin.id,
@@ -49,6 +59,7 @@ const authMiddleware = async (req, res, next) => {
         lastName: admin.lastName,
         email: admin.email,
         role: admin.role.role,
+        roleId: admin.role.id,
       });
     }
 
@@ -59,6 +70,8 @@ const authMiddleware = async (req, res, next) => {
       lastName: admin.lastName,
       email: admin.email,
       role: admin.role.role,
+      roleId: admin.role.id,
+      profile: admin.profile,
     };
 
     next();
@@ -69,5 +82,4 @@ const authMiddleware = async (req, res, next) => {
     });
   }
 };
-
 module.exports = authMiddleware;

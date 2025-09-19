@@ -26,6 +26,7 @@ const Notification = sequelize.define(
         "Cancelled Memberships",
         "Members",
         "Member Roles",
+        // "Admins",
         "System",
         "Activity Logs",
         "Security",

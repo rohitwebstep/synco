@@ -4,11 +4,13 @@ const { PaymentPlan } = require("../../../models");
 
 const { validateFormData } = require("../../../utils/validateFormData");
 const { logActivity } = require("../../../utils/admin/activityLogger");
-const { createNotification } = require('../../../utils/admin/notificationHelper');
+const {
+  createNotification,
+} = require("../../../utils/admin/notificationHelper");
 
-const DEBUG = process.env.DEBUG === 'true';
-const PANEL = 'admin';
-const MODULE = 'payment-group';
+const DEBUG = process.env.DEBUG === "true";
+const PANEL = "admin";
+const MODULE = "payment-group";
 
 // ✅ Create a new payment group
 exports.createPaymentGroup = async (req, res) => {
@@ -21,10 +23,11 @@ exports.createPaymentGroup = async (req, res) => {
   const validation = validateFormData(formData, {
     requiredFields: ["name", "description"],
   });
+  console.log(`req.admin - `, req.admin);
 
   if (!validation.isValid) {
     if (DEBUG) console.log("❌ Validation failed:", validation.error);
-    await logActivity(req, PANEL, MODULE, 'create', validation.error, false);
+    await logActivity(req, PANEL, MODULE, "create", validation.error, false);
     return res.status(400).json({
       status: false,
       error: validation.error,
@@ -34,18 +37,26 @@ exports.createPaymentGroup = async (req, res) => {
 
   // ✅ Safely handle "plans"
   if (typeof plans === "string") {
-    plans = plans.split(",").map(id => id.trim()).filter(Boolean);
+    plans = plans
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
   } else if (!Array.isArray(plans)) {
     plans = [];
   }
 
   try {
     // STEP 1: Create the group
-    const result = await paymentGroupModel.createPaymentGroup({ name, description, plans });
+    const result = await paymentGroupModel.createPaymentGroup({
+      name,
+      description,
+      plans,
+      createdBy: req.admin.id,
+    });
 
     if (!result.status) {
       console.warn("⚠️ Payment group creation failed:", result.message);
-      await logActivity(req, PANEL, MODULE, 'create', result, false);
+      await logActivity(req, PANEL, MODULE, "create", result, false);
       return res.status(500).json({
         status: false,
         message: result.message || "Failed to create payment group.",
@@ -55,13 +66,23 @@ exports.createPaymentGroup = async (req, res) => {
     const groupId = result.data.id;
 
     // STEP 2: Remove any existing plans (cleanup)
-    const existingPlanResult = await groupPlanService.getPaymentGroupAssignedPlans(groupId);
-    const existingPlans = existingPlanResult.status ? existingPlanResult.data : [];
+    const existingPlanResult =
+      await groupPlanService.getPaymentGroupAssignedPlans(
+        groupId,
+        req.admin.id
+      );
+    const existingPlans = existingPlanResult.status
+      ? existingPlanResult.data
+      : [];
     const newPlanIds = plans.map(String);
-    const toRemove = existingPlans.filter(id => !newPlanIds.includes(id));
+    const toRemove = existingPlans.filter((id) => !newPlanIds.includes(id));
 
     for (const planId of toRemove) {
-      const removeResult = await groupPlanService.removePlanFromPaymentGroup(groupId, planId);
+      const removeResult = await groupPlanService.removePlanFromPaymentGroup(
+        groupId,
+        planId,
+        req.admin.id
+      );
       if (DEBUG) {
         console.log(
           removeResult.status
@@ -84,25 +105,44 @@ exports.createPaymentGroup = async (req, res) => {
         continue;
       }
 
-      const assignResult = await groupPlanService.assignPlanToPaymentGroup(groupId, planId);
+      const assignResult = await groupPlanService.assignPlanToPaymentGroup(
+        groupId,
+        planId,
+        req.admin.id
+      );
       if (!assignResult.status) {
         skipped.push({ planId, reason: assignResult.message });
-        console.warn(`⚠️ Failed to assign plan ID ${planId}: ${assignResult.message}`);
+        console.warn(
+          `⚠️ Failed to assign plan ID ${planId}: ${assignResult.message}`
+        );
         continue;
       }
 
-      if (DEBUG) console.log(`✅ Assigned plan ID ${planId} to group ${groupId}`);
+      if (DEBUG)
+        console.log(`✅ Assigned plan ID ${planId} to group ${groupId}`);
       assigned.push(assignResult.data);
     }
 
     if (DEBUG) console.log("✅ Payment group created:", result.data);
 
-    await logActivity(req, PANEL, MODULE, 'create', {
-      oneLineMessage: `Created payment group "${name}".`
-    }, true);
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "create",
+      {
+        oneLineMessage: `Created payment group "${name}".`,
+      },
+      true
+    );
 
     const msg = `Payment group "${name}" created successfully by Admin: ${req.admin?.name}`;
-    await createNotification(req, "Payment Group Created", msg, "Payment Groups");
+    await createNotification(
+      req,
+      "Payment Group Created",
+      msg,
+      "Payment Groups"
+    );
 
     return res.status(201).json({
       status: true,
@@ -111,7 +151,14 @@ exports.createPaymentGroup = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error creating payment group:", error);
-    await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: error.message }, false);
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "create",
+      { oneLineMessage: error.message },
+      false
+    );
     return res.status(500).json({
       status: false,
       message: "Server error occurred. Please try again later.",
@@ -119,85 +166,88 @@ exports.createPaymentGroup = async (req, res) => {
   }
 };
 
-// ✅ Get all payment groups
 exports.getAllPaymentGroups = async (req, res) => {
-  if (DEBUG) console.log("📥 Fetching all payment groups...");
+  const adminId = req.admin?.id;
+
+  if (DEBUG)
+    console.log(`📦 Getting all payment groups for admin ID: ${adminId}`);
 
   try {
-    const result = await paymentGroupModel.getAllPaymentGroups();
+    const result = await paymentGroupModel.getAllPaymentGroups(adminId);
+
+    await logActivity(req, PANEL, MODULE, "getAll", result, result.status);
 
     if (!result.status) {
-      console.warn("⚠️ Failed to fetch groups:", result.message);
-      await logActivity(req, PANEL, MODULE, 'list', result, false);
-      return res.status(500).json({ status: false, message: result.message });
+      return res.status(400).json({ status: false, message: result.message });
     }
-
-    if (DEBUG) console.log(`📦 Total groups fetched: ${result.data.length}`);
-
-    await logActivity(req, PANEL, MODULE, 'list', {
-      oneLineMessage: `Fetched ${result.data.length} payment group(s).`,
-    }, true);
 
     return res.status(200).json({
       status: true,
-      total: result.data.length,
+      message: result.message,
       data: result.data,
     });
   } catch (error) {
-    console.error("❌ Error fetching payment groups:", error);
-    await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: error.message }, false);
-    return res.status(500).json({ status: false, message: "Server error occurred." });
+    console.error("❌ getAllPaymentGroups Error:", error);
+    await logActivity(req, PANEL, MODULE, "getAll", error, false);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
   }
 };
 
-// ✅ Get a single payment group by ID
 exports.getPaymentGroupById = async (req, res) => {
   const { id } = req.params;
+  const adminId = req.admin?.id;
 
-  if (DEBUG) console.log(`🔍 Fetching payment group with ID: ${id}`);
+  if (DEBUG)
+    console.log(`🔍 Fetching payment group by ID: ${id}, admin ID: ${adminId}`);
 
   try {
-    const result = await paymentGroupModel.getPaymentGroupById(id);
+    const result = await paymentGroupModel.getPaymentGroupById(id, adminId);
 
-    if (!result.status) {
-      console.warn("⚠️ Payment group not found:", result.message);
-      await logActivity(req, PANEL, MODULE, 'getById', result, false);
-      return res.status(404).json({ status: false, message: result.message });
+    await logActivity(req, PANEL, MODULE, "getById", result, result.status);
+
+    if (!result.status || !result.data) {
+      return res.status(404).json({
+        status: false,
+        message: result.message || "Payment group not found",
+      });
     }
-
-    if (DEBUG) console.log("✅ Payment group fetched successfully:", result.data);
-
-    await logActivity(req, PANEL, MODULE, 'getById', {
-      oneLineMessage: `Fetched payment group ID: ${id}`,
-    }, true);
 
     return res.status(200).json({
       status: true,
+      message: result.message,
       data: result.data,
     });
   } catch (error) {
-    console.error("❌ Error fetching payment group:", error);
-    await logActivity(req, PANEL, MODULE, 'getById', { oneLineMessage: error.message }, false);
-    return res.status(500).json({ status: false, message: "Server error occurred." });
+    console.error("❌ getPaymentGroupById Error:", error);
+    await logActivity(req, PANEL, MODULE, "getById", error, false);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
   }
 };
 
-// ✅ Update an existing payment group
 exports.updatePaymentGroup = async (req, res) => {
   const { id } = req.params;
   const formData = req.body;
+  const adminId = req.admin?.id;
+
   const { name, description } = formData;
   let { plans } = formData;
 
-  if (DEBUG) console.log(`✏️ Updating payment group ID: ${id} with data:`, formData);
+  if (DEBUG)
+    console.log(`✏️ Updating payment group ID: ${id} with data:`, formData);
 
   const validation = validateFormData(formData, {
-    requiredFields: ["name", "description"]
+    requiredFields: ["name", "description"],
   });
 
   if (!validation.isValid) {
     if (DEBUG) console.log("❌ Validation failed:", validation.error);
-    await logActivity(req, PANEL, MODULE, 'update', validation.error, false);
+    await logActivity(req, PANEL, MODULE, "update", validation.error, false);
     return res.status(400).json({
       status: false,
       error: validation.error,
@@ -205,32 +255,61 @@ exports.updatePaymentGroup = async (req, res) => {
     });
   }
 
-  // ✅ Safely handle "plans"
   if (typeof plans === "string") {
-    plans = plans.split(",").map(id => id.trim()).filter(Boolean);
+    plans = plans
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
   } else if (!Array.isArray(plans)) {
     plans = [];
   }
 
   try {
-    // ✅ Step 1: Update group basic info
-    const result = await paymentGroupModel.updatePaymentGroup(id, { name, description });
+    // Step 1: Update basic info
+    const result = await paymentGroupModel.updatePaymentGroup(id, adminId, {
+      name,
+      description,
+    });
 
     if (!result.status) {
-      console.warn("⚠️ Failed to update payment group:", result.message);
-      await logActivity(req, PANEL, MODULE, 'update', result, false);
+      if (DEBUG)
+        console.warn("⚠️ Failed to update payment group:", result.message);
+      await logActivity(req, PANEL, MODULE, "update", result, false);
       return res.status(404).json({ status: false, message: result.message });
     }
 
-    // ✅ Step 2: Handle plan re-assignment
-    const existingPlanResult = await groupPlanService.getPaymentGroupAssignedPlans(id);
-    const existingPlans = existingPlanResult.status ? existingPlanResult.data : [];
+    // Step 2: Plan assignment
+    const existingResult = await groupPlanService.getPaymentGroupAssignedPlans(
+      id,
+      adminId
+    );
+    const existingPlans = existingResult.status
+      ? existingResult.data.map(String)
+      : [];
+
     const newPlanIds = plans.map(String);
 
-    // Remove unselected plans
-    const toRemove = existingPlans.filter(existingId => !newPlanIds.includes(existingId));
+    const toRemove = existingPlans.filter((id) => !newPlanIds.includes(id));
+    const toAdd = newPlanIds.filter((id) => !existingPlans.includes(id));
+
+    if (DEBUG)
+      console.log(
+        "🔁 Reassigning plans. To Add:",
+        toAdd,
+        "To Remove:",
+        toRemove
+      );
+
     for (const planId of toRemove) {
-      const removeResult = await groupPlanService.removePlanFromPaymentGroup(id, planId);
+      // const removeResult = await groupPlanService.removePlanFromPaymentGroup(
+      //   id,
+      //   planId
+      // );
+      const removeResult = await groupPlanService.removePlanFromPaymentGroup(
+        id,
+        planId,
+        adminId
+      );
       if (DEBUG) {
         console.log(
           removeResult.status
@@ -240,38 +319,57 @@ exports.updatePaymentGroup = async (req, res) => {
       }
     }
 
-    // Add newly selected plans
-    for (const planId of newPlanIds) {
-      const planCheck = await PaymentPlan.findByPk(planId);
-      if (!planCheck) {
-        console.warn(`⛔ Skipped plan ID ${planId}: not found`);
+    for (const planId of toAdd) {
+      const planExists = await PaymentPlan.findByPk(planId);
+      if (!planExists) {
+        console.warn(`⛔ Skipped non-existent plan ID ${planId}`);
         continue;
       }
 
-      const assignResult = await groupPlanService.assignPlanToPaymentGroup(id, planId);
-      if (!assignResult.status) {
-        console.warn(`⚠️ Failed to assign plan ID ${planId}: ${assignResult.message}`);
-        continue;
+      // const assignResult = await groupPlanService.assignPlanToPaymentGroup(
+      //   id,
+      //   planId
+      // );
+      const assignResult = await groupPlanService.assignPlanToPaymentGroup(
+        id,
+        planId,
+        adminId
+      );
+      if (!assignResult.status && DEBUG) {
+        console.warn(
+          `⚠️ Failed to assign plan ID ${planId}: ${assignResult.message}`
+        );
+      } else {
+        if (DEBUG) console.log(`✅ Assigned plan ID ${planId} to group ${id}`);
       }
-
-      if (DEBUG) console.log(`✅ Assigned plan ID ${planId} to group ${id}`);
     }
 
-    if (DEBUG) console.log("✅ Payment group updated successfully:", result.data);
+    if (DEBUG) console.log("✅ Finished updating payment group:", result.data);
 
-    await logActivity(req, PANEL, MODULE, 'update', {
-      oneLineMessage: `Updated payment group ID: ${id}`,
-    }, true);
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "update",
+      { oneLineMessage: `Updated payment group ID: ${id}` },
+      true
+    );
 
     return res.status(200).json({
       status: true,
       message: "Payment group updated successfully.",
       data: result.data,
     });
-
   } catch (error) {
     console.error("❌ Error updating payment group:", error);
-    await logActivity(req, PANEL, MODULE, 'update', { oneLineMessage: error.message }, false);
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "update",
+      { oneLineMessage: error.message },
+      false
+    );
     return res.status(500).json({
       status: false,
       message: "Server error occurred.",
@@ -282,17 +380,22 @@ exports.updatePaymentGroup = async (req, res) => {
 // ✅ Delete a payment group
 exports.deletePaymentGroup = async (req, res) => {
   const { id } = req.params;
+  const adminId = req.admin?.id;
 
   if (DEBUG) console.log(`🗑️ Deleting payment group ID: ${id}`);
 
   try {
     // Step 1: Fetch group by ID to ensure it exists
-    const groupResult = await paymentGroupModel.getPaymentGroupById(id);
+    const groupResult = await paymentGroupModel.getPaymentGroupById(
+      id,
+      adminId
+    ); // ⬅️ Pass adminId here
 
     if (!groupResult.status || !groupResult.data) {
-      const notFoundMsg = groupResult.message || `Payment group with ID ${id} not found.`;
+      const notFoundMsg =
+        groupResult.message || `Payment group with ID ${id} not found.`;
       console.warn("⚠️", notFoundMsg);
-      await logActivity(req, PANEL, MODULE, 'getById', groupResult, false);
+      await logActivity(req, PANEL, MODULE, "getById", groupResult, false);
 
       return res.status(404).json({ status: false, message: notFoundMsg });
     }
@@ -300,31 +403,57 @@ exports.deletePaymentGroup = async (req, res) => {
     const paymentGroup = groupResult.data;
 
     // Step 2: Delete the group
-    const deleteResult = await paymentGroupModel.deletePaymentGroup(id);
+    const deleteResult = await paymentGroupModel.deletePaymentGroup(
+      id,
+      adminId
+    ); // ⬅️ Also pass here
 
     if (!deleteResult.status) {
       console.warn("⚠️ Failed to delete payment group:", deleteResult.message);
-      await logActivity(req, PANEL, MODULE, 'delete', deleteResult, false);
+      await logActivity(req, PANEL, MODULE, "delete", deleteResult, false);
 
-      return res.status(500).json({ status: false, message: deleteResult.message });
+      return res
+        .status(500)
+        .json({ status: false, message: deleteResult.message });
     }
 
     const successMsg = `Payment group "${paymentGroup.name}" deleted by Admin: ${req.admin?.name}`;
     if (DEBUG) console.log("✅", successMsg);
 
-    await logActivity(req, PANEL, MODULE, 'delete', { oneLineMessage: successMsg }, true);
-    await createNotification(req, "Payment Group Deleted", successMsg, "Payment Groups");
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "delete",
+      { oneLineMessage: successMsg },
+      true
+    );
+    await createNotification(
+      req,
+      "Payment Group Deleted",
+      successMsg,
+      "Payment Groups"
+    );
 
     return res.status(200).json({
       status: true,
       message: "Payment group deleted successfully.",
     });
   } catch (error) {
-    const errorMsg = error?.message || "Unexpected error while deleting the payment group.";
+    const errorMsg =
+      error?.message || "Unexpected error while deleting the payment group.";
     console.error("❌ Error deleting payment group:", error);
 
-    await logActivity(req, PANEL, MODULE, 'delete', { oneLineMessage: errorMsg }, false);
-    return res.status(500).json({ status: false, message: "Server error occurred." });
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "delete",
+      { oneLineMessage: errorMsg },
+      false
+    );
+    return res
+      .status(500)
+      .json({ status: false, message: "Server error occurred." });
   }
 };
-

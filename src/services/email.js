@@ -1,6 +1,6 @@
 const { EmailConfig } = require("../models");
 
-const DEBUG = process.env.DEBUG === 'true';
+const DEBUG = process.env.DEBUG === "true";
 
 /**
  * Get an active email configuration by module and action.
@@ -84,7 +84,10 @@ exports.getEmailConfig = async (module, action, status = true) => {
     if (DEBUG) {
       console.log("📦 Final Email Configuration Object:", config);
       console.log("📝 Email Subject:", emailConfig.subject);
-      console.log("🧩 HTML Template Length:", emailConfig.html_template?.length || 0);
+      console.log(
+        "🧩 HTML Template Length:",
+        emailConfig.html_template?.length || 0
+      );
     }
 
     return {

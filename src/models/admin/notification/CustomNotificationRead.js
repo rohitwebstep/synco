@@ -39,13 +39,28 @@ const CustomNotificationRead = sequelize.define(
   }
 );
 
+// CustomNotificationRead.associate = (models) => {
+//   CustomNotificationRead.belongsTo(models.CustomNotification, {
+//     foreignKey: "customNotificationId",
+//     as: "notification",
+//     onDelete: "CASCADE",
+//   });
+
+//   CustomNotificationRead.belongsTo(models.Admin, {
+//     foreignKey: "adminId",
+//     as: "admin", // << this is the alias you MUST use in `include`
+//   });
+// };
+
 CustomNotificationRead.associate = (models) => {
+  // Link to notification
   CustomNotificationRead.belongsTo(models.CustomNotification, {
     foreignKey: "customNotificationId",
     as: "notification",
     onDelete: "CASCADE",
   });
 
+  // Link to Admin (recipient)
   CustomNotificationRead.belongsTo(models.Admin, {
     foreignKey: "adminId",
     as: "admin",

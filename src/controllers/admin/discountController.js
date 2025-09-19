@@ -6,9 +6,9 @@ const { validateFormData } = require("../../utils/validateFormData");
 const { logActivity } = require("../../utils/admin/activityLogger");
 const { createNotification } = require("../../utils/admin/notificationHelper");
 
-const DEBUG = process.env.DEBUG === 'true';
-const PANEL = 'admin';
-const MODULE = 'discount';
+const DEBUG = process.env.DEBUG === "true";
+const PANEL = "admin";
+const MODULE = "discount";
 
 // ✅ Create Discount
 exports.createDiscount = async (req, res) => {
@@ -22,19 +22,27 @@ exports.createDiscount = async (req, res) => {
 
     const validation = validateFormData(formData, {
       requiredFields: [
-        "type", "code", "valueType", "value", "applyOncePerOrder",
-        "limitTotalUses", "limitPerCustomer", "startDatetime", "endDatetime", "appliesTo"
+        "type",
+        "code",
+        "valueType",
+        "value",
+        "applyOncePerOrder",
+        "limitTotalUses",
+        "limitPerCustomer",
+        "startDatetime",
+        "endDatetime",
+        "appliesTo",
       ],
       patternValidations: {
         value: "decimal",
-        startDatetime: "datetime"
-      }
+        startDatetime: "datetime",
+      },
     });
 
     if (!validation.isValid) {
       if (DEBUG) console.log("❌ Validation failed:", validation.error);
 
-      await logActivity(req, PANEL, MODULE, 'create', validation.error, false);
+      await logActivity(req, PANEL, MODULE, "create", validation.error, false);
       return res.status(400).json({
         status: false,
         error: validation.error,
@@ -49,15 +57,30 @@ exports.createDiscount = async (req, res) => {
 
     if (discountByCodeResult.status) {
       const message = "This discount code is already in use.";
-      await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: message }, false);
+      await logActivity(
+        req,
+        PANEL,
+        MODULE,
+        "create",
+        { oneLineMessage: message },
+        false
+      );
       return res.status(400).json({ status: false, message });
     }
 
-    if (DEBUG) console.log("✅ Discount code is available. Creating discount...");
+    if (DEBUG)
+      console.log("✅ Discount code is available. Creating discount...");
 
     const {
-      type, valueType, value, applyOncePerOrder,
-      limitTotalUses, limitPerCustomer, startDatetime, endDatetime, appliesTo
+      type,
+      valueType,
+      value,
+      applyOncePerOrder,
+      limitTotalUses,
+      limitPerCustomer,
+      startDatetime,
+      endDatetime,
+      appliesTo,
     } = formData;
 
     const discountPayload = {
@@ -72,10 +95,19 @@ exports.createDiscount = async (req, res) => {
       endDatetime,
     };
 
-    const discountCreateResult = await discountService.createDiscount(discountPayload);
+    const discountCreateResult = await discountService.createDiscount(
+      discountPayload
+    );
 
     if (!discountCreateResult.status) {
-      await logActivity(req, PANEL, MODULE, 'create', discountCreateResult, false);
+      await logActivity(
+        req,
+        PANEL,
+        MODULE,
+        "create",
+        discountCreateResult,
+        false
+      );
       return res.status(500).json({
         status: false,
         message: discountCreateResult.message || "Failed to create discount.",
@@ -84,11 +116,13 @@ exports.createDiscount = async (req, res) => {
 
     const discount = discountCreateResult.data;
 
-    if (DEBUG) console.log("✅ Discount created successfully. Applying to targets...");
+    if (DEBUG)
+      console.log("✅ Discount created successfully. Applying to targets...");
 
-    const existingTargetsResult = await discountService.getDiscountAppliedToByDiscountId(discount.id);
+    const existingTargetsResult =
+      await discountService.getDiscountAppliedToByDiscountId(discount.id);
     const existingTargets = existingTargetsResult.status
-      ? existingTargetsResult.data.map(item => item.appliesTo)
+      ? existingTargetsResult.data.map((item) => item.appliesTo)
       : [];
 
     for (const item of appliesTo) {
@@ -102,9 +136,18 @@ exports.createDiscount = async (req, res) => {
         target: item,
       };
 
-      const applyResult = await discountService.createDiscountAppliesTo(appliesToPayload);
+      const applyResult = await discountService.createDiscountAppliesTo(
+        appliesToPayload
+      );
       if (!applyResult.status) {
-        await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: `Failed to apply discount to ${item}` }, false);
+        await logActivity(
+          req,
+          PANEL,
+          MODULE,
+          "create",
+          { oneLineMessage: `Failed to apply discount to ${item}` },
+          false
+        );
         return res.status(500).json({
           status: false,
           message: `Failed to apply discount to: ${item}. ${applyResult.message}`,
@@ -115,20 +158,32 @@ exports.createDiscount = async (req, res) => {
     const successMessage = `Discount '${code}' created successfully by Admin: ${req.admin?.name}`;
     if (DEBUG) console.log("✅", successMessage);
 
-    await logActivity(req, PANEL, MODULE, 'create', { oneLineMessage: successMessage }, true);
-    await createNotification(req, "New Discount Created", successMessage, "Discounts");
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "create",
+      { oneLineMessage: successMessage },
+      true
+    );
+    await createNotification(
+      req,
+      "New Discount Created",
+      successMessage,
+      "Discounts"
+    );
 
     return res.status(201).json({
       status: true,
       message: "Discount created successfully.",
       data: discount,
     });
-
   } catch (error) {
     console.error("❌ Create Discount Error:", error);
     return res.status(500).json({
       status: false,
-      message: "Server error occurred while creating the discount. Please try again later.",
+      message:
+        "Server error occurred while creating the discount. Please try again later.",
     });
   }
 };
@@ -144,7 +199,14 @@ exports.getAllDiscounts = async (req, res) => {
       const errorMsg = result.message || "Failed to fetch discounts.";
       if (DEBUG) console.log("❌ Failed to fetch discounts:", errorMsg);
 
-      await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: errorMsg }, false);
+      await logActivity(
+        req,
+        PANEL,
+        MODULE,
+        "list",
+        { oneLineMessage: errorMsg },
+        false
+      );
 
       return res.status(500).json({
         status: false,
@@ -153,33 +215,44 @@ exports.getAllDiscounts = async (req, res) => {
     }
 
     const count = result.data.length;
-    const message = `Fetched ${count} discount${count === 1 ? '' : 's'} successfully.`;
+    const message = `Fetched ${count} discount${
+      count === 1 ? "" : "s"
+    } successfully.`;
 
     if (DEBUG) {
       console.log(`✅ ${message}`);
-      console.table(result.data.map(d => ({
-        ID: d.id,
-        Code: d.code,
-        Type: d.type,
-        Value: d.value,
-        ActiveFrom: d.startDatetime,
-        ActiveTo: d.endDatetime
-      })));
+      console.table(
+        result.data.map((d) => ({
+          ID: d.id,
+          Code: d.code,
+          Type: d.type,
+          Value: d.value,
+          ActiveFrom: d.startDatetime,
+          ActiveTo: d.endDatetime,
+        }))
+      );
     }
 
-    await logActivity(req, PANEL, MODULE, 'list', { oneLineMessage: message }, true);
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "list",
+      { oneLineMessage: message },
+      true
+    );
 
     return res.status(200).json({
       status: true,
       message,
       data: result.data,
     });
-
   } catch (error) {
     console.error("❌ Get All Discounts Error:", error);
     return res.status(500).json({
       status: false,
-      message: "Server error occurred while fetching discounts. Please try again later.",
+      message:
+        "Server error occurred while fetching discounts. Please try again later.",
     });
   }
 };

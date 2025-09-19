@@ -5,7 +5,7 @@ const { Op } = require("sequelize");
 exports.getAllCountries = async () => {
   try {
     const countries = await Country.findAll({
-      order: [["name", "DESC"]],
+      order: [["name", "ASC"]],
     });
 
     return {
@@ -18,7 +18,10 @@ exports.getAllCountries = async () => {
 
     return {
       status: false,
-      message: error?.parent?.sqlMessage || error?.message || "Failed to fetch countries.",
+      message:
+        error?.parent?.sqlMessage ||
+        error?.message ||
+        "Failed to fetch countries.",
     };
   }
 };
@@ -29,23 +32,26 @@ exports.getStatesByCountryId = async (countryId) => {
     const states = await State.findAll({
       where: {
         countryId: {
-          [Op.eq]: countryId
-        }
+          [Op.eq]: countryId,
+        },
       },
-      order: [["name", "ASC"]]
+      order: [["name", "ASC"]],
     });
 
     return {
       status: true,
       message: `Fetched ${states.length} state(s) for country ID ${countryId} successfully.`,
-      data: states
+      data: states,
     };
   } catch (error) {
     console.error("❌ Sequelize Error in getStatesByCountryId:", error);
 
     return {
       status: false,
-      message: error?.parent?.sqlMessage || error?.message || "Failed to fetch states for the country."
+      message:
+        error?.parent?.sqlMessage ||
+        error?.message ||
+        "Failed to fetch states for the country.",
     };
   }
 };
@@ -58,21 +64,24 @@ exports.getCountryById = async (countryId) => {
     if (!country) {
       return {
         status: false,
-        message: `No country found with ID ${countryId}.`
+        message: `No country found with ID ${countryId}.`,
       };
     }
 
     return {
       status: true,
       message: `Country ID ${countryId} fetched successfully.`,
-      data: country
+      data: country,
     };
   } catch (error) {
     console.error("❌ Sequelize Error in getCountryById:", error);
 
     return {
       status: false,
-      message: error?.parent?.sqlMessage || error?.message || "Failed to fetch country by ID."
+      message:
+        error?.parent?.sqlMessage ||
+        error?.message ||
+        "Failed to fetch country by ID.",
     };
   }
 };

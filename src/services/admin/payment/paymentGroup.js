@@ -2,13 +2,14 @@ const { PaymentGroup, PaymentPlan } = require("../../../models");
 const { Op } = require("sequelize");
 
 // ✅ Create a group
-exports.createPaymentGroup = async ({ name, description }) => {
+exports.createPaymentGroup = async ({ name, description, createdBy }) => {
   try {
     const group = await PaymentGroup.create({
       name,
       description,
-      createdAt: new Date(), // Optional if timestamps: true in model
+      createdBy,
     });
+
     return {
       status: true,
       data: group,
@@ -22,68 +23,81 @@ exports.createPaymentGroup = async ({ name, description }) => {
   }
 };
 
-// ✅ Get all groups
-exports.getAllPaymentGroups = async () => {
+exports.getAllPaymentGroups = async (adminId) => {
   try {
     const groups = await PaymentGroup.findAll({
+      where: { createdBy: adminId },
       include: [
         {
           model: PaymentPlan,
           as: "paymentPlans",
-        }
+        },
       ],
-      order: [["createdAt", "DESC"]]
+      order: [["createdAt", "DESC"]],
     });
 
     return {
       status: true,
+      message: "Payment groups fetched successfully",
       data: groups,
-      message: `${groups.length} payment group(s) found.`,
     };
   } catch (error) {
+    console.error("❌ Error in getAllPaymentGroups:", error);
     return {
       status: false,
-      message: `Failed to fetch payment groups. ${error.message}`,
+      message: "Failed to fetch payment groups",
+      error,
     };
   }
 };
 
-// ✅ Get a group by ID
-exports.getPaymentGroupById = async (id) => {
+exports.getPaymentGroupById = async (id, adminId) => {
   try {
-    const group = await PaymentGroup.findByPk(id, {
+    const group = await PaymentGroup.findOne({
+      where: { id, createdBy: adminId },
       include: [
         {
           model: PaymentPlan,
           as: "paymentPlans",
-        }
-      ]
+        },
+      ],
     });
 
     if (!group) {
       return {
         status: false,
-        message: "No payment group found with the provided ID.",
+        message: "Payment group not found",
       };
     }
 
     return {
       status: true,
+      message: "Payment group fetched successfully",
       data: group,
-      message: "Payment group retrieved successfully.",
     };
   } catch (error) {
+    console.error("❌ Error in getPaymentGroupById:", error);
     return {
       status: false,
-      message: `Error retrieving payment group. ${error.message}`,
+      message: "Failed to fetch payment group",
+      error,
     };
   }
 };
 
-// ✅ Update a group
-exports.updatePaymentGroup = async (id, { name, description }) => {
+// ✅ Update a payment group by ID and createdBy
+exports.updatePaymentGroup = async (id, createdBy, { name, description }) => {
   try {
-    const group = await PaymentGroup.findByPk(id);
+    if (!id || !createdBy) {
+      return {
+        status: false,
+        message: "Missing payment group ID or admin ID (createdBy).",
+      };
+    }
+
+    const group = await PaymentGroup.findOne({
+      where: { id, createdBy },
+    });
 
     if (!group) {
       return {
@@ -100,17 +114,20 @@ exports.updatePaymentGroup = async (id, { name, description }) => {
       message: "Payment group updated successfully.",
     };
   } catch (error) {
+    console.error("❌ Error updating payment group:", error);
     return {
       status: false,
-      message: `Failed to update group. ${error.message}`,
+      message: `Failed to update payment group. ${error.message}`,
     };
   }
 };
 
-// ✅ Delete a group
-exports.deletePaymentGroup = async (id) => {
+// ✅ Delete a group by ID and createdBy
+exports.deletePaymentGroup = async (id, createdBy) => {
   try {
-    const group = await PaymentGroup.findByPk(id);
+    const group = await PaymentGroup.findOne({
+      where: { id, createdBy },
+    });
 
     if (!group) {
       return {

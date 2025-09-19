@@ -3,7 +3,7 @@ const router = express.Router({ mergeParams: true });
 const authMiddleware = require("../../../middleware/admin/authenticate");
 
 const {
-  getAllCountries
+  getAllCountries,
 } = require("../../../controllers/location/countryController");
 
 router.get("/", authMiddleware, getAllCountries);

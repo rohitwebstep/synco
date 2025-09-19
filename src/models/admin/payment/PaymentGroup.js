@@ -2,16 +2,25 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 
-const PaymentGroup = sequelize.define("PaymentGroup", {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
+const PaymentGroup = sequelize.define(
+  "PaymentGroup",
+  {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: DataTypes.TEXT,
+    createdBy: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+    },
   },
-  description: DataTypes.TEXT,
-}, {
-  tableName: "payment_groups",
-  timestamps: true,
-});
+
+  {
+    tableName: "payment_groups",
+    timestamps: true,
+  }
+);
 
 // ✅ Association
 PaymentGroup.associate = (models) => {

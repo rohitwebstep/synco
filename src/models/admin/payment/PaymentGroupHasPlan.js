@@ -18,10 +18,14 @@ const PaymentGroupHasPlan = sequelize.define(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
+    createdBy: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+    },
   },
   {
     tableName: "payment_group_has_plans",
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

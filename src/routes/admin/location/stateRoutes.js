@@ -3,7 +3,7 @@ const router = express.Router({ mergeParams: true });
 const authMiddleware = require("../../../middleware/admin/authenticate");
 
 const {
-  getAllStates
+  getAllStates,
 } = require("../../../controllers/location/stateController");
 
 router.get("/", authMiddleware, getAllStates);

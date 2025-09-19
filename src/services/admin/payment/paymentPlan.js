@@ -4,13 +4,39 @@ const { Op } = require("sequelize");
 // ✅ Create a new payment plan
 exports.createPlan = async (data) => {
   try {
-    const plan = await PaymentPlan.create(data);
+    const {
+      title,
+      price,
+      priceLesson,
+      interval,
+      duration,
+      students,
+      joiningFee,
+      HolidayCampPackage,
+      termsAndCondition,
+      createdBy,
+    } = data;
+
+    const plan = await PaymentPlan.create({
+      title,
+      price,
+      priceLesson,
+      interval,
+      duration,
+      students,
+      joiningFee,
+      HolidayCampPackage,
+      termsAndCondition,
+      createdBy,
+    });
+
     return {
       status: true,
       data: plan,
       message: "Payment plan created successfully.",
     };
   } catch (error) {
+    console.error("❌ createPlan error:", error.message);
     return {
       status: false,
       message: `Failed to create payment plan. ${error.message}`,
@@ -18,10 +44,11 @@ exports.createPlan = async (data) => {
   }
 };
 
-// ✅ Get all payment plans
-exports.getAllPlans = async () => {
+// ✅ Get all payment plans for current admin
+exports.getAllPlans = async (createdBy) => {
   try {
     const plans = await PaymentPlan.findAll({
+      where: { createdBy },
       order: [["createdAt", "DESC"]],
     });
 
@@ -38,10 +65,12 @@ exports.getAllPlans = async () => {
   }
 };
 
-// ✅ Get payment plan by ID
-exports.getPlanById = async (id) => {
+// ✅ Get payment plan by ID and createdBy
+exports.getPlanById = async (id, createdBy) => {
   try {
-    const plan = await PaymentPlan.findByPk(id);
+    const plan = await PaymentPlan.findOne({
+      where: { id, createdBy },
+    });
 
     if (!plan) {
       return {
@@ -63,10 +92,12 @@ exports.getPlanById = async (id) => {
   }
 };
 
-// ✅ Update a payment plan
-exports.updatePlan = async (id, data) => {
+// ✅ Update a payment plan by ID and createdBy
+exports.updatePlan = async (id, adminId, data) => {
   try {
-    const plan = await PaymentPlan.findByPk(id);
+    const plan = await PaymentPlan.findOne({
+      where: { id, createdBy: adminId },
+    });
 
     if (!plan) {
       return {
@@ -90,10 +121,12 @@ exports.updatePlan = async (id, data) => {
   }
 };
 
-// ✅ Delete a payment plan
-exports.deletePlan = async (id) => {
+// ✅ Delete a payment plan by ID and createdBy
+exports.deletePlan = async (id, createdBy) => {
   try {
-    const plan = await PaymentPlan.findByPk(id);
+    const plan = await PaymentPlan.findOne({
+      where: { id, createdBy },
+    });
 
     if (!plan) {
       return {

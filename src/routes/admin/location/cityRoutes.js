@@ -6,6 +6,7 @@ const {
   getAllCities
 } = require("../../../controllers/location/cityController");
 
+
 router.get("/", authMiddleware, getAllCities);
 
 module.exports = router;
