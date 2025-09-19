@@ -440,6 +440,36 @@ exports.getSessionPlanGroupDetails = async (req, res) => {
   }
 };
 
+exports.downloadSessionPlanGroupVideo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const filename = req.query.filename;
+    const createdBy = req.admin?.id || req.user?.id;
+
+    const result = await SessionPlanGroupService.getSessionPlanGroupVideoStream(
+      id,
+      createdBy,
+      filename
+    );
+
+    if (!result.status) {
+      return res.status(404).json({ status: false, message: result.message });
+    }
+
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${result.filename}"`
+    );
+
+    // Pipe stream to response
+    result.stream.pipe(res);
+  } catch (error) {
+    console.error("❌ Error in downloadSessionPlanGroupVideo:", error);
+    res.status(500).json({ status: false, message: "Server error." });
+  }
+};
+
 // ✅ UPDATE Session Plan Group
 // exports.updateSessionPlanGroup = async (req, res) => {
 //   const { id } = req.params;

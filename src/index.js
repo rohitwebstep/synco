@@ -26,6 +26,8 @@ app.use("/api/admin", require("./routes/admin")); // Manage Admins
 app.use("/api/location", require("./routes/location")); // Manage members
 app.use("/api/location", require("./routes/location")); // Manage members
 
+app.use("/api/test", require("./routes/test")); // Test
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

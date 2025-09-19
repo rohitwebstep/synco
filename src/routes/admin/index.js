@@ -70,7 +70,7 @@ router.use("/no-membership", require("./noMembershipTrialRoutes"));
 // Book Membership Modle Base Routes
 router.use("/book-membership", require("./bookingMembershipRoutes"));
 router.use("/cancel-membership", require("./cancelMembershipBookingRoutes"));
-router.use("/book-membership", require("./freezeBookingRoutes"));
+// router.use("/book-membership", require("./freezeBookingRoutes"));
 router.use("/credits", require("./creditsRoutes"));
 
 // Waiting List Module Base Routes

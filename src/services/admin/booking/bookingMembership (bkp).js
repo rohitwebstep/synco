@@ -16,10 +16,6 @@ const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 const { getEmailConfig } = require("../../email");
 const sendEmail = require("../../../utils/email/sendEmail");
-const { createCustomer, removeCustomer } = require("../../../utils/payment/pay360/customer");
-const { createBillingRequest } = require("../../../utils/payment/pay360/payment");
-
-const DEBUG = process.env.DEBUG === "true";
 
 function generateBookingId(length = 12) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -184,67 +180,57 @@ exports.createBooking = async (data, options) => {
         let gatewayResponse = null;
         const amountInPence = Math.round(price * 100);
 
-        let goCardlessCustomer;
-        let goCardlessBankAccount;
-        let goCardlessBillingRequest;
-
         if (paymentType === "rrn") {
-          // Step 1: Prepare payload for customer creation
-          const customerPayload = {
-            email: data.payment.email || data.parents?.[0]?.parentEmail || "",
-            given_name: data.payment.firstName || "",
-            family_name: data.payment.lastName || "",
-            address_line1: data.payment.addressLine1 || "",
-            address_line2: data.payment.addressLine2 || "",
-            city: data.payment.city || "",
-            postal_code: data.payment.postalCode || "",
-            country_code: data.payment.countryCode || "",
-            region: data.payment.region || "",
-            crm_id: `CUSTID-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
-            account_holder_name: data.payment.account_holder_name || "",
-            account_number: data.payment.account_number || "",
-            branch_code: data.payment.branch_code || "",
-            bank_code: data.payment.bank_code || "",
-            account_type: data.payment.account_type || "",
-            iban: data.payment.iban || "",
-          };
+          // 🔹 RRN payment using GoCardless
+          if (!data.payment.referenceId)
+            throw new Error("Reference ID is required for RRN payments.");
 
-          if (DEBUG) console.log("🛠 Generated payload:", customerPayload);
-
-          // Step 2: Create customer + bank account
-          const createCustomerRes = await createCustomer(customerPayload);
-          if (!createCustomerRes.status) {
-            throw new Error(createCustomerRes.message || "Failed to create goCardless customer.");
-          }
-
-          // Step 3: Prepare payload for billing request
-          const billingRequestPayload = {
-            customerId: createCustomerRes.customer.id,
-            description: `${venue?.name || "Venue"} - ${classSchedule?.className || "Class"
-              }`,
-            amount: price,
-            scheme: "faster_payments",
-            currency: "GBP",
-            reference: `TRX-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
-            mandateReference: `MD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
-            metadata: {
-              crm_id: customerPayload.crm_id,
+          const gcPayload = {
+            cardHolderName: null, // <-- set to null
+            cv2: null, // <-- set to null
+            expiryDate: null, // <-- set to null
+            pan: null, // <-- set to null
+            billing_requests: {
+              payment_request: {
+                description: `${venue?.name || "Venue"} - ${classSchedule?.className || "Class"
+                  }`,
+                amount: amountInPence,
+                scheme: "faster_payments",
+                currency: "GBP",
+                metadata: { referenceId: data.payment.referenceId },
+              },
+              mandate_request: {
+                currency: "GBP",
+                scheme: "bacs",
+                verify: "recommended",
+                metadata: { referenceId: data.payment.referenceId },
+              },
+              links: {},
+              metadata: { test: `BR${Math.floor(Math.random() * 1000000)}` },
             },
-            fallbackEnabled: true,
           };
 
-          if (DEBUG) console.log("🛠 Generated billing request payload:", billingRequestPayload);
+          console.log(
+            "GoCardless payload:",
+            JSON.stringify(gcPayload, null, 2)
+          );
 
-          // Step 4: Create billing request
-          const createBillingRequestRes = await createBillingRequest(billingRequestPayload);
-          if (!createBillingRequestRes.status) {
-            await removeCustomer(createCustomerRes.customer.id);
-            throw new Error(createBillingRequestRes.message || "Failed to create billing request.");
-          }
+          const response = await axios.post(
+            "https://api-sandbox.gocardless.com/billing_requests",
+            gcPayload,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.GOCARDLESS_ACCESS_TOKEN}`,
+                "Content-Type": "application/json",
+                "GoCardless-Version": "2015-07-06",
+              },
+            }
+          );
 
-          goCardlessCustomer = createCustomerRes.customer;
-          goCardlessBankAccount = createCustomerRes.bankAccount;
-          goCardlessBillingRequest = createBillingRequestRes.billingRequest;
+          gatewayResponse = response.data;
+          // Extract status dynamically from GoCardless response
+          paymentStatusFromGateway =
+            gatewayResponse?.billing_requests?.status || "pending";
         } else if (paymentType === "card") {
           // 🔹 Card payment using Pay360
           if (
@@ -338,9 +324,6 @@ exports.createBooking = async (data, options) => {
                 gatewayResponse?.billing_requests?.status ||
                 "unknown",
             },
-            goCardlessCustomer,
-            goCardlessBankAccount,
-            goCardlessBillingRequest,
             createdAt: new Date(),
             updatedAt: new Date(),
           },

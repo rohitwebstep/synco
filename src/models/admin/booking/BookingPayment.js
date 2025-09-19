@@ -102,6 +102,20 @@ const BookingPayment = sequelize.define(
       type: DataTypes.JSON,
       allowNull: true,
     },
+
+    // New fields to store GoCardless data
+    goCardlessCustomer: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    goCardlessBankAccount: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    goCardlessBillingRequest: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
   },
   {
     tableName: "booking_payments",

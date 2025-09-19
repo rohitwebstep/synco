@@ -163,10 +163,12 @@ TermGroup.associate = (models) => {
   });
 };
 
+/*
 Venue.belongsTo(models.PaymentPlan, {
   foreignKey: "paymentPlanId",
   as: "paymentPlan",
 });
+*/
 
 // 🧩 Booking <-> Student/Parent/Emergency
 Booking.hasMany(BookingStudentMeta, {
