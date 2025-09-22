@@ -49,6 +49,7 @@ const models = {
 
   //Class Schedule
   ClassSchedule: require("./admin/classSchedule/ClassSchedule"),
+  ClassScheduleTermMap: require("./admin/classSchedule/ClassScheduleTermMap"),
 
   //cancel class
   CancelSession: require("./admin/classSchedule/CancelSession"),
@@ -107,6 +108,7 @@ const {
   Term,
   Venue,
   ClassSchedule,
+  ClassScheduleTermMap,
   CancelSession,
   Booking,
   BookingStudentMeta,
@@ -163,12 +165,10 @@ TermGroup.associate = (models) => {
   });
 };
 
-/*
 Venue.belongsTo(models.PaymentPlan, {
   foreignKey: "paymentPlanId",
   as: "paymentPlan",
 });
-*/
 
 // 🧩 Booking <-> Student/Parent/Emergency
 Booking.hasMany(BookingStudentMeta, {
@@ -305,6 +305,7 @@ module.exports = {
 
   Venue,
   ClassSchedule,
+  ClassScheduleTermMap,
   CancelSession,
 
   Booking,
