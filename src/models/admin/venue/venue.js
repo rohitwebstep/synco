@@ -1,3 +1,4 @@
+
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/db");
 
@@ -31,48 +32,43 @@ const Venue = sequelize.define(
     howToEnterFacility: {
       type: DataTypes.TEXT,
     },
-    // ✅ FK → PaymentPlans.id
-    // paymentPlanId: {
-    //   type: DataTypes.TEXT("long"), // LONGTEXT in MySQL
-    //   allowNull: true,
-    //   comment:
-    //     "Selected payment plan for paid bookings (stored as text instead of FK)",
-    // },
 
-    paymentGroupId: {
-      type: DataTypes.TEXT("long"), // LONGTEXT in MySQL
-      allowNull: true,
-      comment:
-        "Selected payment group for paid bookings (stored as text instead of FK)",
-    },
-    // paymentPlanId: {
-    //   type: DataTypes.INTEGER.UNSIGNED,
+    // ✅ plain text only (no FK)
+    // paymentGroupId: {
+    //   type: DataTypes.TEXT("long"),
     //   allowNull: true,
-    //   references: {
-    //     model: "payment_plans",
-    //     key: "id",
-    //   },
-    //   onDelete: "SET NULL",
-    //   onUpdate: "CASCADE",
+    //   comment: "Selected payment group for paid bookings (stored as text instead of FK)",
     // },
+     // ✅ Use FK to PaymentGroups
+    paymentGroupId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "payment_groups", // 👈 your table name
+        key: "id",
+      },
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE",
+    },
 
     isCongested: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
     },
-
     hasParking: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
     },
+
+    // ✅ plain text only (no FK)
     termGroupId: {
-      type: DataTypes.TEXT("long"), // LONGTEXT in MySQL
+      type: DataTypes.TEXT("long"),
       allowNull: true,
-      comment:
-        "Selected term group for paid bookings (stored as text instead of FK)",
+      comment: "Selected term group for paid bookings (stored as text instead of FK)",
     },
+
     latitude: {
       type: DataTypes.FLOAT,
       allowNull: true,
@@ -96,7 +92,7 @@ const Venue = sequelize.define(
   }
 );
 
-// ✅ Move associations here
+// Associations
 Venue.associate = function (models) {
   Venue.hasMany(models.ClassSchedule, {
     foreignKey: "venueId",
@@ -105,18 +101,3 @@ Venue.associate = function (models) {
 };
 
 module.exports = Venue;
-
-// Venue.associate = function (models) {
-//   Venue.belongsToMany(models.TermGroup, {
-//     through: models.Venue,
-//     as: "termGroups",
-//     foreignKey: "venueId",
-//   });
-
-//   // keep the rest
-
-//   // Venue.hasMany(models.ClassSchedule, {
-//   //   foreignKey: "venueId",
-//   //   as: "classSchedules",
-//   // });
-// };

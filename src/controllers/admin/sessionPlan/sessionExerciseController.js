@@ -15,120 +15,130 @@ const DEBUG = process.env.DEBUG === "true";
 const PANEL = "admin";
 const MODULE = "session-plan-exercise";
 
-// ✅ Create Session Exercise (refined single-step)
 exports.createSessionExercise = async (req, res) => {
   try {
     const formData = req.body;
     const files = req.files || [];
+    const createdBy = req.admin?.id || req.user?.id;
 
-    if (DEBUG) {
-      console.log("📥 Create Exercise:", formData);
-      if (files.length) {
-        files.forEach((f) => console.log("📎 File uploaded:", f.originalname));
-      }
+    if (!createdBy) {
+      console.error("❌ Unauthorized request: createdBy not found");
+      return res.status(403).json({ status: false, message: "Unauthorized request" });
     }
 
-    // ✅ Validate file extensions
+    console.log("🔍 STEP 1: Received create request:", formData);
+
+    // Normalize files to a flat array
+    let filesArray = [];
+    if (Array.isArray(files)) {
+      filesArray = files;
+    } else {
+      filesArray = Object.values(files).flat();
+    }
+
+    if (filesArray.length > 0) {
+      console.log("📎 Files uploaded:", filesArray.map(f => f.originalname));
+    }
+
+    // Validate file extensions
     const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
-    for (const file of files) {
+    for (const file of filesArray) {
       const ext = path.extname(file.originalname).toLowerCase().slice(1);
       if (!allowedExtensions.includes(ext)) {
-        return res.status(400).json({
-          status: false,
-          message: `Invalid file type: ${file.originalname}`,
-        });
+        console.error("❌ Invalid file type:", file.originalname);
+        return res.status(400).json({ status: false, message: `Invalid file type: ${file.originalname}` });
       }
     }
 
-    // ✅ Validate required fields
-    const validation = validateFormData(formData, {
-      requiredFields: ["title"],
-    });
-
+    // Validate required fields
+    const validation = validateFormData(formData, { requiredFields: ["title"] });
     if (!validation.isValid) {
+      console.error("❌ Validation failed:", validation.error);
       await logActivity(req, PANEL, MODULE, "create", validation.error, false);
       return res.status(400).json(validation);
     }
 
-    // ✅ STEP 1: Upload files first
-    let savedImagePaths = [];
-    if (files.length > 0) {
-      for (const file of files) {
-        const uniqueId = Math.floor(Math.random() * 1e9);
-        const ext = path.extname(file.originalname).toLowerCase();
-        const fileName = `${Date.now()}_${uniqueId}${ext}`;
-        const localPath = path.join(
-          process.cwd(),
-          "uploads",
-          "temp",
-          "admin",
-          `${req.admin.id}`, // use admin id folder (or sessionPlan id if needed later)
-          "sessionExercise",
-          fileName
-        );
-
-        await fs.promises.mkdir(path.dirname(localPath), { recursive: true });
-        await saveFile(file, localPath);
-
-        try {
-          // Upload to FTP
-          const savedPath = await uploadToFTP(localPath, fileName);
-          console.log("✅ Uploaded to FTP:", savedPath);
-          savedImagePaths.push(savedPath);
-        } catch (err) {
-          console.error("❌ FTP upload failed:", err.message);
-        } finally {
-          // Clean local temp
-          await fs.promises.unlink(localPath).catch(() => {});
-        }
-      }
-    }
-
-    // ✅ STEP 2: Create exercise with final image array
+    // STEP 2: Create DB row first (without images)
+    console.log("📌 STEP 2: Creating exercise in DB without images");
     const createResult = await SessionExerciseService.createSessionExercise({
       title: formData.title,
       duration: formData.duration || null,
       description: formData.description || null,
-      imageUrl: savedImagePaths, // already uploaded
-      createdBy: req.admin.id,
+      imageUrl: [], // temporarily empty
+      createdBy,
     });
 
     if (!createResult.status) {
+      console.error("❌ DB create failed:", createResult.message);
       await logActivity(req, PANEL, MODULE, "create", createResult, false);
-      return res.status(500).json({
-        status: false,
-        message: createResult.message || "Failed to create exercise",
-      });
+      return res.status(500).json({ status: false, message: createResult.message || "Failed to create exercise" });
     }
 
     const exercise = createResult.data;
+    const exerciseId = exercise.id;
+    console.log("✅ STEP 2: Exercise created with ID:", exerciseId);
 
-    // ✅ STEP 3: Log + notify
-    await logActivity(req, PANEL, MODULE, "create", createResult, true);
+    // STEP 3: Upload files using exercise ID folder
+    const baseUploadDir = path.join(process.cwd(), "uploads", "temp", "admin", `${createdBy}`, "sessionExercise", `${exerciseId}`);
+    console.log("📂 STEP 3: Base upload directory:", baseUploadDir);
+
+    const uploadedUrls = [];
+
+    for (const file of filesArray) {
+      const uniqueId = Date.now() + "_" + Math.floor(Math.random() * 1e9);
+      const ext = path.extname(file.originalname).toLowerCase();
+      const fileName = `${uniqueId}${ext}`;
+      const localPath = path.join(baseUploadDir, fileName);
+
+      console.log("📌 STEP 3a: Saving local file:", localPath);
+      await fs.promises.mkdir(path.dirname(localPath), { recursive: true });
+      await saveFile(file, localPath);
+
+      try {
+        console.log("⬆️ STEP 3b: Uploading to FTP:", localPath);
+        const publicUrl = await uploadToFTP(localPath, fileName);
+        if (publicUrl) {
+          uploadedUrls.push(publicUrl);
+          console.log("✅ STEP 3c: Uploaded successfully:", publicUrl);
+        } else {
+          console.error("❌ STEP 3c: Upload returned null for", localPath);
+        }
+      } catch (err) {
+        console.error("❌ STEP 3b: FTP upload failed for", localPath, err.message);
+      } finally {
+        await fs.promises.unlink(localPath).catch(() => { });
+        console.log("🗑️ STEP 3d: Local temp file deleted:", localPath);
+      }
+    }
+
+    // STEP 4: Update DB with uploaded URLs (still part of creation)
+    console.log("📌 STEP 4: Saving uploaded URLs to DB");
+    const updateResult = await SessionExerciseService.updateSessionExercise(exerciseId, { imageUrl: uploadedUrls }, createdBy);
+    const updatedExercise = updateResult.data;
+    console.log("✅ STEP 4: Exercise saved with images:", uploadedUrls);
+
+    // STEP 5: Log activity + create notification
+    console.log("📌 STEP 5: Logging activity and sending notification");
+    await logActivity(req, PANEL, MODULE, "create", updateResult, true);
     await createNotification(
       req,
       "New Session Exercise Created",
-      `Session Exercise '${formData.title}' was created by ${
-        req?.admin?.firstName || "Admin"
-      }.`,
+      `Session Exercise '${formData.title}' was created by ${req?.admin?.firstName || "Admin"}.`,
       "System"
     );
+    console.log("✅ STEP 5: Notification created");
 
+    // STEP 6: Respond
+    console.log("📦 STEP 6: Responding with created exercise");
     return res.status(201).json({
       status: true,
       message: "Exercise created successfully",
-      data: exercise,
+      data: updatedExercise,
     });
+
   } catch (error) {
-    console.error("❌ Server error:", error);
-    await logActivity(
-      req,
-      PANEL,
-      MODULE,
-      "create",
-      { oneLineMessage: error.message },
-      false
-    );
+    console.error("❌ STEP 0: Server error:", error);
+    await logActivity(req, PANEL, MODULE, "create", { oneLineMessage: error.message }, false);
     return res.status(500).json({ status: false, message: "Server error." });
   }
 };
@@ -195,9 +205,8 @@ exports.getAllSessionExercises = async (req, res) => {
       MODULE,
       "list",
       {
-        oneLineMessage: `Fetched ${
-          result.data.length || 0
-        } exercises for admin ${adminId}`,
+        oneLineMessage: `Fetched ${result.data.length || 0
+          } exercises for admin ${adminId}`,
       },
       true
     );
@@ -274,7 +283,7 @@ exports.updateSessionExercise = async (req, res) => {
         } catch (err) {
           console.error("❌ FTP upload failed:", err.message);
         } finally {
-          await fs.promises.unlink(localPath).catch(() => {});
+          await fs.promises.unlink(localPath).catch(() => { });
           if (DEBUG) console.log("🗑️ Deleted local temp file:", localPath);
         }
       }
@@ -329,8 +338,7 @@ exports.updateSessionExercise = async (req, res) => {
     await createNotification(
       req,
       "Session Exercise Updated",
-      `Session Exercise '${
-        updates.title || existing.data.title
+      `Session Exercise '${updates.title || existing.data.title
       }' was updated by ${req?.admin?.firstName || "Admin"}.`,
       "System"
     );
@@ -384,8 +392,7 @@ exports.deleteSessionExercise = async (req, res) => {
     await createNotification(
       req,
       "Session Exercise Deleted",
-      `Session Exercise ID '${id}' was deleted by ${
-        req?.admin?.name || "Admin"
+      `Session Exercise ID '${id}' was deleted by ${req?.admin?.name || "Admin"
       }.`,
       "System"
     );

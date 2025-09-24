@@ -177,32 +177,28 @@ async function geocodeAddress(address, fallbackArea) {
 // ✅ Create Venue
 exports.createVenue = async (data) => {
   try {
-    // Parse termGroupId
+    // ✅ termGroupId → allow multiple IDs (array)
     if (typeof data.termGroupId === "string") {
       data.termGroupId = data.termGroupId
         .split(",")
         .map((id) => parseInt(id.trim()))
         .filter((id) => !isNaN(id));
     }
+    if (!Array.isArray(data.termGroupId) || data.termGroupId.length === 0) {
+      throw new Error("Invalid termGroupId");
+    }
+    // Store as JSON string if your DB column is string type
+    data.termGroupId = JSON.stringify(data.termGroupId);
 
-    // Parse paymentGroupHasPlanId
-    if (typeof data.paymentGroupHasPlanId === "string") {
-      data.paymentGroupHasPlanId = data.paymentGroupHasPlanId
-        .split(",")
-        .map((id) => parseInt(id.trim()))
-        .filter((id) => !isNaN(id));
+    // ✅ paymentGroupId → single integer
+    if (typeof data.paymentGroupId === "string") {
+      data.paymentGroupId = parseInt(data.paymentGroupId.trim());
+    }
+    if (isNaN(data.paymentGroupId)) {
+      throw new Error("Invalid paymentGroupId");
     }
 
-    // Convert arrays to JSON string before saving
-    if (Array.isArray(data.termGroupId)) {
-      data.termGroupId = JSON.stringify(data.termGroupId);
-    }
-
-    if (Array.isArray(data.paymentGroupHasPlanId)) {
-      data.paymentGroupHasPlanId = JSON.stringify(data.paymentGroupHasPlanId);
-    }
-
-    // Geocode address
+    // ✅ Geocode address
     const coords = await geocodeAddress(data.address, data.area);
     if (coords) {
       data.latitude = coords.latitude;
@@ -210,12 +206,25 @@ exports.createVenue = async (data) => {
       data.postal_code = coords.postal_code;
     }
 
-    // createdBy must exist
+    // ✅ createdBy must exist
     if (!data.createdBy) {
       throw new Error("createdBy is required");
     }
 
+    // ✅ Create venue
     const venue = await Venue.create(data);
+
+    // ✅ Optional: enrich with PaymentGroups and their plans (single id now)
+    let paymentGroups = [];
+    if (venue.paymentGroupId) {
+      paymentGroups = await PaymentGroup.findAll({
+        where: { id: venue.paymentGroupId },
+        include: [{ model: PaymentPlan, as: "paymentPlans" }],
+      });
+    }
+
+    venue.dataValues.paymentGroups = paymentGroups;
+
     return { status: true, data: venue };
   } catch (error) {
     console.error("❌ Venue create error:", error.message);
@@ -393,7 +402,7 @@ exports.getAllVenues = async (createdBy) => {
         "facility",
         "parkingNote",
         "howToEnterFacility",
-        "paymentGroupId", // ✅ use this field
+        "paymentGroupId",
         "isCongested",
         "hasParking",
         "termGroupId",
@@ -407,29 +416,19 @@ exports.getAllVenues = async (createdBy) => {
     });
 
     for (const venue of venues) {
-      // ✅ Parse paymentGroupId
-      let paymentGroupIds = [];
-      if (typeof venue.paymentGroupId === "string") {
-        try {
-          paymentGroupIds = JSON.parse(venue.paymentGroupId);
-          venue.dataValues.paymentGroupId = paymentGroupIds;
-        } catch {
-          paymentGroupIds = [];
-          venue.dataValues.paymentGroupId = [];
-        }
-      } else {
-        paymentGroupIds = venue.paymentGroupId || [];
-      }
+      // =====================
+      // paymentGroupId → single integer
+      // =====================
+      const paymentGroupId = venue.paymentGroupId;
 
-      // ✅ Fetch PaymentGroups with their PaymentPlans
       let paymentGroups = [];
-      if (paymentGroupIds.length > 0) {
+      if (paymentGroupId) {
         paymentGroups = await PaymentGroup.findAll({
-          where: { id: paymentGroupIds },
+          where: { id: paymentGroupId },
           include: [
             {
               model: PaymentPlan,
-              as: "paymentPlans", // must match association alias
+              as: "paymentPlans",
               attributes: [
                 "id",
                 "title",
@@ -450,15 +449,92 @@ exports.getAllVenues = async (createdBy) => {
           order: [["createdAt", "DESC"]],
         });
       }
-      venue.dataValues.paymentGroups = paymentGroups; // keep grouped structure
+      venue.dataValues.paymentGroups = paymentGroups;
 
-      // ✅ Parse termGroupId
+      // =====================
+      // termGroupId → fetch full TermGroup data
+      // =====================
+      let termGroupIds = [];
       if (typeof venue.termGroupId === "string") {
         try {
-          venue.dataValues.termGroupId = JSON.parse(venue.termGroupId);
+          termGroupIds = JSON.parse(venue.termGroupId);
         } catch {
-          venue.dataValues.termGroupId = [];
+          termGroupIds = [];
         }
+      } else if (Array.isArray(venue.termGroupId)) {
+        termGroupIds = venue.termGroupId;
+      }
+
+      if (termGroupIds.length > 0) {
+        const termGroups = await TermGroup.findAll({
+          where: { id: termGroupIds },
+          include: [
+            {
+              model: Term,
+              as: "terms",
+              attributes: [
+                "id",
+                "termGroupId",
+                "termName",
+                "startDate",
+                "endDate",
+                "exclusionDates",
+                "totalSessions",
+                "sessionsMap",
+              ],
+            },
+          ],
+        });
+
+        for (const termGroup of termGroups) {
+          if (termGroup?.terms?.length) {
+            for (const term of termGroup.terms) {
+              // ✅ Parse exclusionDates
+              if (typeof term.exclusionDates === "string") {
+                try {
+                  term.dataValues.exclusionDates = JSON.parse(term.exclusionDates);
+                } catch {
+                  term.dataValues.exclusionDates = [];
+                }
+              }
+
+              // ✅ Parse sessionsMap
+              let parsedSessionsMap = [];
+              if (typeof term.sessionsMap === "string") {
+                try {
+                  parsedSessionsMap = JSON.parse(term.sessionsMap);
+                } catch {
+                  parsedSessionsMap = [];
+                }
+              } else {
+                parsedSessionsMap = term.sessionsMap || [];
+              }
+
+              // ✅ Enrich each sessionMap entry with its sessionPlan
+              for (let i = 0; i < parsedSessionsMap.length; i++) {
+                const entry = parsedSessionsMap[i];
+                if (!entry.sessionPlanId) continue;
+
+                const spg = await SessionPlanGroup.findByPk(entry.sessionPlanId, {
+                  attributes: ["id", "groupName", "levels", "video", "banner", "player"],
+                });
+
+                if (spg) {
+                  await parseSessionPlanGroupLevels(spg); // ← your helper function
+                  entry.sessionPlan = spg;
+                } else {
+                  entry.sessionPlan = null;
+                }
+              }
+
+              term.dataValues.sessionsMap = parsedSessionsMap;
+            }
+          }
+        }
+
+        venue.dataValues.termGroups = termGroups;
+      } else {
+        venue.dataValues.termGroups = [];
       }
     }
 
@@ -619,7 +695,7 @@ exports.getVenueById = async (id, createdBy) => {
     console.log("🔍 Fetching venue by ID:", id);
 
     const venue = await Venue.findOne({
-      where: { id, createdBy }, // ✅ Scope to admin
+      where: { id, createdBy },
       attributes: [
         "id",
         "area",
@@ -628,7 +704,7 @@ exports.getVenueById = async (id, createdBy) => {
         "facility",
         "parkingNote",
         "howToEnterFacility",
-        "paymentGroupId", // ✅ only this now
+        "paymentGroupId", // single integer now
         "isCongested",
         "hasParking",
         "termGroupId",
@@ -646,29 +722,17 @@ exports.getVenueById = async (id, createdBy) => {
       return { status: false, message: "Venue not found." };
     }
 
-    // ✅ Parse paymentGroupId
-    let paymentGroupIds = [];
-    if (typeof venue.paymentGroupId === "string") {
-      try {
-        paymentGroupIds = JSON.parse(venue.paymentGroupId);
-        venue.dataValues.paymentGroupId = paymentGroupIds;
-      } catch {
-        paymentGroupIds = [];
-        venue.dataValues.paymentGroupId = [];
-      }
-    } else {
-      paymentGroupIds = venue.paymentGroupId || [];
-    }
-
-    // ✅ Fetch PaymentGroups with PaymentPlans
+    // =====================
+    // paymentGroupId → single integer
+    // =====================
     let paymentGroups = [];
-    if (paymentGroupIds.length > 0) {
-      paymentGroups = await PaymentGroup.findAll({
-        where: { id: paymentGroupIds },
+    if (venue.paymentGroupId) {
+      const pg = await PaymentGroup.findAll({
+        where: { id: venue.paymentGroupId },
         include: [
           {
             model: PaymentPlan,
-            as: "paymentPlans", // must match association alias in PaymentGroup model
+            as: "paymentPlans",
             attributes: [
               "id",
               "title",
@@ -687,10 +751,13 @@ exports.getVenueById = async (id, createdBy) => {
           },
         ],
       });
+      paymentGroups = pg;
     }
     venue.dataValues.paymentGroups = paymentGroups;
 
-    // ✅ Parse termGroupId
+    // =====================
+    // termGroupId → array of IDs
+    // =====================
     let termGroupIds = [];
     if (typeof venue.termGroupId === "string") {
       try {
@@ -702,7 +769,9 @@ exports.getVenueById = async (id, createdBy) => {
       termGroupIds = venue.termGroupId;
     }
 
-    // ✅ Fetch and enrich term groups
+    // =====================
+    // Fetch and enrich term groups
+    // =====================
     if (termGroupIds.length > 0) {
       const termGroups = await TermGroup.findAll({
         where: { id: termGroupIds },
@@ -726,7 +795,7 @@ exports.getVenueById = async (id, createdBy) => {
 
       for (const termGroup of termGroups) {
         for (const term of termGroup.terms || []) {
-          // ✅ Parse exclusionDates
+          // Parse exclusionDates
           if (typeof term.exclusionDates === "string") {
             try {
               term.dataValues.exclusionDates = JSON.parse(term.exclusionDates);
@@ -735,7 +804,7 @@ exports.getVenueById = async (id, createdBy) => {
             }
           }
 
-          // ✅ Parse and enrich sessionsMap
+          // Parse and enrich sessionsMap
           let parsedSessionsMap = [];
           if (typeof term.sessionsMap === "string") {
             try {
@@ -747,24 +816,16 @@ exports.getVenueById = async (id, createdBy) => {
             parsedSessionsMap = term.sessionsMap || [];
           }
 
-          // ✅ Enrich each entry with sessionPlan
           for (let i = 0; i < parsedSessionsMap.length; i++) {
             const entry = parsedSessionsMap[i];
             if (!entry.sessionPlanId) continue;
 
             const spg = await SessionPlanGroup.findByPk(entry.sessionPlanId, {
-              attributes: [
-                "id",
-                "groupName",
-                "levels",
-                "video",
-                "banner",
-                "player",
-              ],
+              attributes: ["id", "groupName", "levels", "video", "banner", "player"],
             });
 
             if (spg) {
-              await parseSessionPlanGroupLevels(spg); // ✅ includes sessionExercises
+              await parseSessionPlanGroupLevels(spg);
               entry.sessionPlan = spg;
             } else {
               entry.sessionPlan = null;
@@ -801,31 +862,32 @@ exports.updateVenue = async (id, data) => {
       return { status: false, message: "Venue not found." };
     }
 
-    // ✅ Parse and sanitize incoming IDs
+    // =====================
+    // Parse termGroupId → array
+    // =====================
     if (typeof data.termGroupId === "string") {
       data.termGroupId = data.termGroupId
         .split(",")
         .map((id) => parseInt(id.trim()))
         .filter((id) => !isNaN(id));
     }
-
-    if (typeof data.paymentPlanId === "string") {
-      data.paymentPlanId = data.paymentPlanId
-        .split(",")
-        .map((id) => parseInt(id.trim()))
-        .filter((id) => !isNaN(id));
-    }
-
-    // ✅ Convert arrays to JSON string before saving
     if (Array.isArray(data.termGroupId)) {
       data.termGroupId = JSON.stringify(data.termGroupId);
     }
 
-    if (Array.isArray(data.paymentPlanId)) {
-      data.paymentPlanId = JSON.stringify(data.paymentPlanId);
+    // =====================
+    // Parse paymentGroupId → single integer
+    // =====================
+    if (typeof data.paymentGroupId === "string") {
+      data.paymentGroupId = parseInt(data.paymentGroupId.trim());
+    }
+    if (data.paymentGroupId && isNaN(data.paymentGroupId)) {
+      throw new Error("Invalid paymentGroupId");
     }
 
-    // ✅ Re-geocode if address or area changed
+    // =====================
+    // Re-geocode if address or area changed
+    // =====================
     if (data.address || data.area) {
       const coords = await geocodeAddress(
         data.address || venue.address,
@@ -835,37 +897,39 @@ exports.updateVenue = async (id, data) => {
         data.latitude = coords.latitude;
         data.longitude = coords.longitude;
         data.postal_code = coords.postal_code;
-        console.log(
-          `📍 Geocoded → ${coords.latitude}, ${coords.longitude}, ${coords.postal_code}`
-        );
       }
     }
 
-    // ✅ Update venue
+    // =====================
+    // Update venue
+    // =====================
     await venue.update(data);
 
-    // ✅ Re-fetch updated venue and enrich
     const updatedVenue = await Venue.findByPk(id);
 
-    // ✅ Payment Plans
-    const paymentGroupIds =
-      typeof updatedVenue.paymentGroupId === "string"
-        ? JSON.parse(updatedVenue.paymentGroupId || "[]")
-        : Array.isArray(updatedVenue.paymentGroupId)
-          ? updatedVenue.paymentGroupId
-          : [];
+    // =====================
+    // Payment Groups (single ID) & nested PaymentPlans
+    // =====================
+    let paymentGroups = [];
+    if (updatedVenue.paymentGroupId) {
+      paymentGroups = await PaymentGroup.findAll({
+        where: { id: updatedVenue.paymentGroupId },
+        include: [{ model: PaymentPlan, as: "paymentPlans" }],
+      });
+    }
+    updatedVenue.dataValues.paymentGroups = paymentGroups;
 
-    updatedVenue.dataValues.paymentGroup = paymentGroupIds.length
-      ? await PaymentGroup.findAll({ where: { id: paymentGroupIds } })
-      : [];
-
-    // ✅ Term Groups & Terms
-    let termGroupIds =
-      typeof updatedVenue.termGroupId === "string"
-        ? JSON.parse(updatedVenue.termGroupId || "[]")
-        : Array.isArray(updatedVenue.termGroupId)
-          ? updatedVenue.termGroupId
-          : [];
+    // =====================
+    // Term Groups → fetch full TermGroup + Terms + sessions
+    // =====================
+    let termGroupIds = [];
+    if (typeof updatedVenue.termGroupId === "string") {
+      try {
+        termGroupIds = JSON.parse(updatedVenue.termGroupId);
+      } catch {
+        termGroupIds = [];
+      }
+    }
 
     if (termGroupIds.length > 0) {
       const termGroups = await TermGroup.findAll({
@@ -915,14 +979,7 @@ exports.updateVenue = async (id, data) => {
             if (!entry.sessionPlanId) continue;
 
             const spg = await SessionPlanGroup.findByPk(entry.sessionPlanId, {
-              attributes: [
-                "id",
-                "groupName",
-                "levels",
-                "video",
-                "banner",
-                "player",
-              ],
+              attributes: ["id", "groupName", "levels", "video", "banner", "player"],
             });
 
             if (spg) {

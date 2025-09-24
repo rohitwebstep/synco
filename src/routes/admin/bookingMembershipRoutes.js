@@ -124,4 +124,25 @@ router.put(
   cancelWaitingListSpot
 );
 
+// cancel membership booking----------------------------------------------------------------------------
+const {
+  createCancelBooking,
+  sendCancelBookingEmail,
+  // createNoMembership,
+} = require("../../controllers/admin/booking/cancelMembershipBookingController");
+
+router.post(
+  "/cancel-membership",
+  authMiddleware,
+  permissionMiddleware("cancel-membership", "create"),
+  createCancelBooking
+);
+
+router.post(
+  "/cancel-membership/send-email",
+  authMiddleware,
+  permissionMiddleware("cancel-membership", "view-listing"),
+  sendCancelBookingEmail
+);
+
 module.exports = router;

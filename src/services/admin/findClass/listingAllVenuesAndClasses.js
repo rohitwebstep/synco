@@ -5,6 +5,8 @@ const {
   Term,
   TermGroup,
   SessionPlanGroup,
+  PaymentGroup,
+  PaymentGroupHasPlan,
   SessionExercise,
 } = require("../../../models");
 
@@ -93,28 +95,12 @@ exports.getAllVenuesWithClasses = async ({ userLat, userLng }) => {
     const currentLng = userLng ?? -0.1;
 
     const venues = await Venue.findAll({
-      where: {}, // 🔄 No createdBy filtering
+      where: {},
       include: [
         {
           model: ClassSchedule,
           as: "classSchedules",
           required: false,
-        },
-        {
-          model: PaymentPlan,
-          as: "paymentPlan",
-          required: false,
-          attributes: [
-            "id",
-            "title",
-            "price",
-            "interval",
-            "students",
-            "duration",
-            "joiningFee",
-            "HolidayCampPackage",
-            "termsAndCondition",
-          ],
         },
       ],
       order: [["id", "ASC"]],
@@ -126,39 +112,69 @@ exports.getAllVenuesWithClasses = async ({ userLat, userLng }) => {
 
     const formattedVenues = await Promise.all(
       venues.map(async (venue) => {
-        const safeParse = (val) => {
-          if (!val) return null;
+        // =====================
+        // Parse paymentGroupId → single integer
+        // =====================
+        const paymentGroups =
+          venue.paymentGroupId != null
+            ? await PaymentGroup.findAll({
+                where: { id: venue.paymentGroupId },
+                include: [
+                  {
+                    model: PaymentPlan,
+                    as: "paymentPlans",
+                    through: {
+                      model: PaymentGroupHasPlan,
+                      attributes: [
+                        "id",
+                        "payment_plan_id",
+                        "payment_group_id",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt",
+                      ],
+                    },
+                  },
+                ],
+                order: [["createdAt", "DESC"]],
+              })
+            : [];
+
+        // =====================
+        // Parse termGroupId → array
+        // =====================
+        let termGroupIds = [];
+        if (typeof venue.termGroupId === "string") {
           try {
-            return typeof val === "string" ? JSON.parse(val) : val;
+            termGroupIds = JSON.parse(venue.termGroupId);
           } catch {
-            return null;
+            termGroupIds = [];
           }
-        };
+        } else if (Array.isArray(venue.termGroupId)) {
+          termGroupIds = venue.termGroupId;
+        }
 
-        const paymentPlanIds = parseSafeArray(venue.paymentPlanId);
-        const termGroupIds = parseSafeArray(venue.termGroupId);
+        // Fetch termGroups
+        const termGroups = termGroupIds.length
+          ? await TermGroup.findAll({ where: { id: termGroupIds } })
+          : [];
 
-        const paymentPlans = await PaymentPlan.findAll({
-          where: { id: { [Op.in]: paymentPlanIds } },
-        });
-
-        const termGroups = await TermGroup.findAll({
-          where: { id: { [Op.in]: termGroupIds } },
-        });
-
-        const terms = await Term.findAll({
-          where: { termGroupId: { [Op.in]: termGroupIds } },
-          attributes: [
-            "id",
-            "termName",
-            "startDate",
-            "endDate",
-            "termGroupId",
-            "exclusionDates",
-            "totalSessions",
-            "sessionsMap",
-          ],
-        });
+        // Fetch terms
+        const terms = termGroupIds.length
+          ? await Term.findAll({
+              where: { termGroupId: { [Op.in]: termGroupIds } },
+              attributes: [
+                "id",
+                "termName",
+                "startDate",
+                "endDate",
+                "termGroupId",
+                "exclusionDates",
+                "totalSessions",
+                "sessionsMap",
+              ],
+            })
+          : [];
 
         const parsedTerms = terms.map((t) => ({
           id: t.id,
@@ -166,12 +182,19 @@ exports.getAllVenuesWithClasses = async ({ userLat, userLng }) => {
           startDate: t.startDate,
           endDate: t.endDate,
           termGroupId: t.termGroupId,
-          exclusionDates: safeParse(t.exclusionDates),
+          exclusionDates:
+            typeof t.exclusionDates === "string"
+              ? JSON.parse(t.exclusionDates)
+              : t.exclusionDates || [],
           totalSessions: t.totalSessions,
-          sessionsMap: safeParse(t.sessionsMap) || [],
+          sessionsMap:
+            typeof t.sessionsMap === "string"
+              ? JSON.parse(t.sessionsMap)
+              : t.sessionsMap || [],
         }));
 
-        const venueClasses = venue.classSchedules.reduce((acc, cls) => {
+        // Map class schedules by day
+        const venueClasses = (venue.classSchedules || []).reduce((acc, cls) => {
           const day = cls.day;
           if (!day) return acc;
           if (!acc[day]) acc[day] = [];
@@ -192,12 +215,7 @@ exports.getAllVenuesWithClasses = async ({ userLat, userLng }) => {
         const distanceMiles =
           !isNaN(venueLat) && !isNaN(venueLng)
             ? parseFloat(
-                calculateDistance(
-                  currentLat,
-                  currentLng,
-                  venueLat,
-                  venueLng
-                ).toFixed(1)
+                calculateDistance(currentLat, currentLng, venueLat, venueLng).toFixed(1)
               )
             : null;
 
@@ -215,16 +233,29 @@ exports.getAllVenuesWithClasses = async ({ userLat, userLng }) => {
           postal_code: venue.postal_code,
           distanceMiles,
           classes: venueClasses,
-          paymentPlans: paymentPlans.map((plan) => ({
-            id: plan.id,
-            title: plan.title,
-            price: plan.price,
-            interval: plan.interval,
-            students: plan.students,
-            duration: plan.duration,
-            joiningFee: plan.joiningFee,
-            holidayCampPackage: plan.HolidayCampPackage,
-            termsAndCondition: plan.termsAndCondition,
+          paymentGroups: paymentGroups.map((pg) => ({
+            id: pg.id,
+            name: pg.name,
+            description: pg.description,
+            createdBy: pg.createdBy,
+            createdAt: pg.createdAt,
+            updatedAt: pg.updatedAt,
+            paymentPlans: (pg.paymentPlans || []).map((plan) => ({
+              id: plan.id,
+              title: plan.title,
+              price: plan.price,
+              priceLesson: plan.priceLesson,
+              interval: plan.interval,
+              duration: plan.duration,
+              students: plan.students,
+              joiningFee: plan.joiningFee,
+              HolidayCampPackage: plan.HolidayCampPackage,
+              termsAndCondition: plan.termsAndCondition,
+              createdBy: plan.createdBy,
+              createdAt: plan.createdAt,
+              updatedAt: plan.updatedAt,
+              PaymentGroupHasPlan: plan.PaymentGroupHasPlan || null,
+            })),
           })),
           termGroups: termGroups.map((group) => ({
             id: group.id,
@@ -337,7 +368,7 @@ exports.getAllClasses = async (adminId) => {
 exports.getClassById = async (classId) => {
   try {
     const cls = await ClassSchedule.findOne({
-      where: { id: classId }, // ✅ removed createdBy filter
+      where: { id: classId },
       include: [{ model: Venue, as: "venue" }],
     });
 
@@ -350,20 +381,24 @@ exports.getClassById = async (classId) => {
 
     const venue = cls.venue;
 
-    let termGroupIds = Array.isArray(venue.termGroupId)
-      ? venue.termGroupId
-      : typeof venue.termGroupId === "string"
-      ? JSON.parse(venue.termGroupId || "[]")
-      : [];
+    // =====================
+    // Parse termGroupId → array
+    // =====================
+    let termGroupIds = [];
+    if (typeof venue.termGroupId === "string") {
+      try {
+        termGroupIds = JSON.parse(venue.termGroupId);
+      } catch {
+        termGroupIds = [];
+      }
+    } else if (Array.isArray(venue.termGroupId)) {
+      termGroupIds = venue.termGroupId;
+    }
 
-    let paymentPlanIds = Array.isArray(venue.paymentPlanId)
-      ? venue.paymentPlanId
-      : typeof venue.paymentPlanId === "string"
-      ? JSON.parse(venue.paymentPlanId || "[]")
-      : [];
-
+    // =====================
+    // Fetch termGroups with nested terms & sessions
+    // =====================
     let termGroups = [];
-
     if (termGroupIds.length) {
       termGroups = await TermGroup.findAll({
         where: { id: termGroupIds },
@@ -371,31 +406,26 @@ exports.getClassById = async (classId) => {
       });
 
       for (const group of termGroups) {
-        for (const term of group.terms) {
+        for (const term of group.terms || []) {
+          // Parse exclusionDates
           if (typeof term.exclusionDates === "string") {
             term.dataValues.exclusionDates = JSON.parse(
               term.exclusionDates || "[]"
             );
           }
 
+          // Parse sessionsMap
           let parsedMap =
             typeof term.sessionsMap === "string"
               ? JSON.parse(term.sessionsMap || "[]")
               : term.sessionsMap || [];
 
-          for (let i = 0; i < parsedMap.length; i++) {
-            const entry = parsedMap[i];
+          // Enrich sessionPlan data
+          for (const entry of parsedMap) {
             if (!entry.sessionPlanId) continue;
 
             const spg = await SessionPlanGroup.findByPk(entry.sessionPlanId, {
-              attributes: [
-                "id",
-                "groupName",
-                "levels",
-                "video",
-                "banner",
-                "player",
-              ],
+              attributes: ["id", "groupName", "levels", "video", "banner", "player"],
             });
 
             entry.sessionPlan = spg
@@ -410,12 +440,34 @@ exports.getClassById = async (classId) => {
       venue.dataValues.termGroups = termGroups;
     }
 
-    if (paymentPlanIds.length) {
-      const paymentPlans = await PaymentPlan.findAll({
-        where: { id: paymentPlanIds },
+    // =====================
+    // Fetch paymentGroups with nested paymentPlans
+    // =====================
+    let paymentGroups = [];
+    if (venue.paymentGroupId) {
+      paymentGroups = await PaymentGroup.findAll({
+        where: { id: venue.paymentGroupId },
+        include: [
+          {
+            model: PaymentPlan,
+            as: "paymentPlans",
+            through: {
+              model: PaymentGroupHasPlan,
+              attributes: [
+                "id",
+                "payment_plan_id",
+                "payment_group_id",
+                "createdBy",
+                "createdAt",
+                "updatedAt",
+              ],
+            },
+          },
+        ],
+        order: [["createdAt", "DESC"]],
       });
-      venue.dataValues.paymentPlans = paymentPlans;
     }
+    venue.dataValues.paymentGroups = paymentGroups;
 
     return {
       status: true,
@@ -423,7 +475,7 @@ exports.getClassById = async (classId) => {
       data: cls,
     };
   } catch (error) {
-    console.error("❌ getClassByIdWithFullDetails Error:", error.message);
+    console.error("❌ getClassById Error:", error.message);
     return { status: false, message: "Fetch failed: " + error.message };
   }
 };
