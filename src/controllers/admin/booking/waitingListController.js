@@ -190,6 +190,7 @@ exports.createBooking = async (req, res) => {
   try {
     if (DEBUG) console.log("🚀 Creating booking...");
     const result = await BookingTrialService.createBooking(formData, {
+      source: req.source,
       adminId: req.admin?.id,
       adminFirstName: req.admin?.firstName || "Unknown",
     });
