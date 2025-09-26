@@ -297,7 +297,6 @@ exports.getAllVenuesWithClasses = async ({ userLatitude, userLongitude, searchRa
   }
 };
 
-
 exports.getAllClasses = async (adminId) => {
   try {
     const classes = await ClassSchedule.findAll({
@@ -317,14 +316,14 @@ exports.getAllClasses = async (adminId) => {
       let termGroupIds = Array.isArray(venue.termGroupId)
         ? venue.termGroupId
         : typeof venue.termGroupId === "string"
-          ? JSON.parse(venue.termGroupId || "[]")
-          : [];
+        ? JSON.parse(venue.termGroupId || "[]")
+        : [];
 
       let paymentPlanIds = Array.isArray(venue.paymentPlanId)
         ? venue.paymentPlanId
         : typeof venue.paymentPlanId === "string"
-          ? JSON.parse(venue.paymentPlanId || "[]")
-          : [];
+        ? JSON.parse(venue.paymentPlanId || "[]")
+        : [];
 
       if (termGroupIds.length) {
         const termGroups = await TermGroup.findAll({
