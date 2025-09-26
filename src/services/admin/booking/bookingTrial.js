@@ -12,8 +12,6 @@ const {
 const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 
-const DEBUG = process.env.DEBUG === "true";
-
 const { getEmailConfig } = require("../../email");
 const sendEmail = require("../../../utils/email/sendEmail");
 

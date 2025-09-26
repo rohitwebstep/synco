@@ -1,6 +1,7 @@
 const { validateFormData } = require("../../../utils/validateFormData");
 const BookingTrialService = require("../../../services/admin/booking/waitingList");
 const { logActivity } = require("../../../utils/admin/activityLogger");
+const { sequelize } = require("../../../models");
 
 const {
   Venue,
@@ -443,6 +444,72 @@ exports.getAccountProfile = async (req, res) => {
   }
 };
 
+exports.updateWaitinglistBooking = async (req, res) => {
+  const DEBUG = process.env.DEBUG === "true";
+
+  try {
+    if (DEBUG) console.log("🔹 Controller entered: updateWaitinglistBooking");
+
+    const bookingId = req.params?.bookingId;
+    const studentsPayload = req.body?.students || [];
+    const adminId = req.admin?.id;
+
+    // ✅ Security check
+    if (!adminId) return res.status(401).json({ status: false, message: "Unauthorized" });
+
+    // ✅ Validate bookingId
+    if (!bookingId) return res.status(400).json({ status: false, message: "Booking ID is required in URL" });
+
+    // ✅ Validate payload
+    if (!Array.isArray(studentsPayload) || studentsPayload.length === 0) {
+      return res.status(400).json({ status: false, message: "Students array is required and cannot be empty" });
+    }
+
+    studentsPayload.forEach(student => {
+      if (!student.id) throw new Error("Each student must have an ID");
+      if (!Array.isArray(student.parents)) student.parents = [];
+      if (!Array.isArray(student.emergencyContacts)) student.emergencyContacts = [];
+    });
+
+    const t = await sequelize.transaction();
+    const result = await BookingTrialService.updateBookingStudents(bookingId, studentsPayload, t);
+
+    if (!result.status) {
+      await t.rollback();
+      return res.status(400).json(result);
+    }
+
+    await t.commit();
+    if (DEBUG) console.log("✅ Transaction committed");
+
+    // 🔹 Log activity
+    await logActivity(
+      req,
+      PANEL,
+      MODULE,
+      "update",
+      { message: `Updated student, parent, and emergency data for booking ID: ${bookingId}` },
+      true
+    );
+
+    // 🔹 Send notification
+    await createNotification(
+      req,
+      "Booking Updated",
+      `Student, parent, and emergency data updated for booking ID: ${bookingId}.`,
+      "System"
+    );
+
+    if (DEBUG) console.log("✅ Controller finished successfully");
+
+    return res.status(200).json(result);
+
+  } catch (error) {
+    if (DEBUG) console.error("❌ Controller updateWaitinglistBooking Error:", error.message);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 exports.removeWaitingList = async (req, res) => {
   try {
     const { bookingId, removedReason, removedNotes } = req.body;
@@ -615,8 +682,7 @@ exports.convertToMembership = async (req, res) => {
               .replace(/{{studentLastName}}/g, student.studentLastName || "")
               .replace(
                 /{{studentName}}/g,
-                `${student.studentFirstName || ""} ${
-                  student.studentLastName || ""
+                `${student.studentFirstName || ""} ${student.studentLastName || ""
                 }`
               )
               .replace(/{{venueName}}/g, venueName)
