@@ -10,4 +10,7 @@ router.use("/book/free-trials", require("./bookFreeTrailsRoutes"));
 // Waiting List Module Base Routes
 router.use("/waiting-list", require("./waitingListRoutes"));
 
+// Book Membership Modle Base Routes
+router.use("/book-membership", require("./bookingMembershipRoutes"));
+
 module.exports = router;
